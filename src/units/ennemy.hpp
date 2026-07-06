@@ -1,9 +1,12 @@
 #pragma once
 #include <SFML/System/Vector2.hpp>
+#include <string>
 #include "player.hpp"
 
 class IEnnemy {
     public:
+        virtual std::string getName() const = 0;
+        virtual std::string getDescription() const = 0;
         virtual ~IEnnemy() {}
         virtual void takeDamage(int damage) = 0;
         virtual int getHealth() const = 0;
@@ -23,10 +26,10 @@ class IEnnemy {
         virtual sf::Vector2i getPosition() const = 0;
 };
 
-class Rat : public IEnnemy {
+class AEnnemy : public IEnnemy {
     public:
-        Rat() : health(3), position(0, 0), level(1), move_speed(1), base_attack(2), base_defense(1), base_range(1) {}
-        ~Rat() {}
+        AEnnemy() : health(10), position(0, 0), level(1), move_speed(1), base_attack(1), base_defense(1), base_range(1) {}
+        ~AEnnemy() {}
 
         void takeDamage(int damage) override { health -= damage; }
         int getHealth() const override { return health; }
@@ -48,6 +51,10 @@ class Rat : public IEnnemy {
             return damage > 0 ? damage : 0;
         }
         sf::Vector2i getPosition() const override { return position; }
+        std::string getName() const override { return name; }
+        std::string getDescription() const override { return description; }
+        void setName(const std::string& n) { name = n; }
+        void setDescription(const std::string& d) { description = d; }
 
     private:
         int health;
@@ -57,4 +64,34 @@ class Rat : public IEnnemy {
         int base_attack;
         int base_defense;
         int base_range;
+        std::string name;
+        std::string description;
+};
+
+class Rat: public AEnnemy {
+    public:
+        Rat() : AEnnemy() {
+            setAttack(2);
+            setDefense(1);
+            setRange(1);
+            setLevel(1);
+            setMoveSpeed(2);
+            setName("Rat");
+            setDescription("A small, quick, and aggressive rodent. It can be a nuisance in large numbers, but is relatively weak on its own.");
+        }
+        ~Rat() {}
+};
+
+class Goblin: public AEnnemy {
+    public:
+        Goblin() : AEnnemy() {
+            setAttack(4);
+            setDefense(2);
+            setRange(1);
+            setLevel(2);
+            setMoveSpeed(1);
+            setName("Goblin");
+            setDescription("A small, green-skinned humanoid creature.");
+        }
+        ~Goblin() {}
 };
