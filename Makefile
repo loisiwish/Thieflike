@@ -3,9 +3,10 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -Wpedantic
 TARGET = rogue
 
 SRC = src/main.cpp	\
-	src/window.cpp	\
-	src/loop.cpp	\
-	src/menu.cpp	\
+	src/window/window.cpp	\
+	src/window/loop.cpp	\
+	src/window/menu.cpp	\
+	
 
 OBJ = $(SRC:.cpp=.o)
 

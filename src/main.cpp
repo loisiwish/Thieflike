@@ -1,6 +1,6 @@
-#include "window.hpp"
-#include "loop.hpp"
-#include "menu.hpp"
+#include "window/window.hpp"
+#include "window/loop.hpp"
+#include "window/menu.hpp"
 
 
 int main() {
