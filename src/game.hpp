@@ -10,7 +10,7 @@ class Game {
             // Destructor logic if needed
         }
         
-        sf::RenderWindow* getWindow() const { return window.getWindow(); }
+        Window &getWindow() { return window; }
 
     private:
         Window window;
