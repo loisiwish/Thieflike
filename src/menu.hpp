@@ -2,40 +2,37 @@
 
 #include "game.hpp"
 
+#include <cstddef>
+#include <string>
+#include <vector>
+
 bool init_Menu(Game& game);
 void show_Menu(Game& game);
-
-class MenuUi {
-    public:
-        MenuUi() : initialized(false), fontLoaded(false) {}
-
-        sf::Font font;
-        sf::Text title;
-        sf::Text playButton;
-        sf::Text optionsButton;
-        sf::Text exitButton;
-        bool initialized;
-        bool fontLoaded;
-};
+void menu_SelectNext();
+void menu_SelectPrevious();
 
 class Button {
     public:
-        Button(const std::string& text, const sf::Font& font, unsigned int characterSize, const sf::Vector2f& position)
-            : text(text, font, characterSize) {
-            this->text.setPosition(position);
-        }
+        Button(const std::string& label, const sf::Font& font, unsigned int characterSize);
+
+        void setCenteredPosition(float centerX, float y);
+        void setSelected(bool selected);
+        void draw(sf::RenderWindow& window) const;
 
     private:
         sf::Text text;
+};
 
-        void draw(sf::RenderWindow& window) {
-            window.draw(text);
-        }
+class MenuUi {
+    public:
+        MenuUi();
 
-        bool isClicked(const sf::Vector2f& mousePos) const {
-            return text.getGlobalBounds().contains(mousePos);
-        }
-        bool isHovered(const sf::Vector2f& mousePos) const {
-            return text.getGlobalBounds().contains(mousePos);
-        }
+        void updateSelection();
+
+        sf::Font font;
+        sf::Text title;
+        std::vector<Button> buttons;
+        std::size_t selectedIndex;
+        bool initialized;
+        bool fontLoaded;
 };

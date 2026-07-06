@@ -18,7 +18,9 @@ int get_Events(Game& game, sf::Keyboard::Key& keyPressed) {
 
                 case sf::Keyboard::Z:
                 case sf::Keyboard::Up:
-                    // Handle Z or Up key press
+                    if (game.getState() == 0) {
+                        menu_SelectPrevious();
+                    }
                     break;
                 case sf::Keyboard::Q:
                 case sf::Keyboard::Left:
@@ -26,7 +28,9 @@ int get_Events(Game& game, sf::Keyboard::Key& keyPressed) {
                     break;
                 case sf::Keyboard::S:
                 case sf::Keyboard::Down:
-                    // Handle S key press
+                    if (game.getState() == 0) {
+                        menu_SelectNext();
+                    }
                     break;
                 case sf::Keyboard::D:
                 case sf::Keyboard::Right:
