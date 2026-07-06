@@ -10,10 +10,43 @@ Stage::Stage() : stageDepth(0), stageWidth(10), stageHeight(10) {
     // Spawn two rats far away from the player near opposite corners.
     Rat ratTopLeft;
     ratTopLeft.setPosition(1, 1);
-    ennemies.push_back(ratTopLeft);
+    addEnemy(ratTopLeft);
 
     Rat ratBottomRight;
     ratBottomRight.setPosition(stageWidth - 2, stageHeight - 2);
-    ennemies.push_back(ratBottomRight);
+    addEnemy(ratBottomRight);
+}
+
+bool Stage::addEnemy(const AEnnemy& enemy) {
+    const sf::Vector2i position = enemy.getPosition();
+    if (position.x < 0 || position.y < 0 || position.x >= stageWidth || position.y >= stageHeight) {
+        return false;
+    }
+
+    if (getEnemyAt(position.x, position.y) != nullptr) {
+        return false;
+    }
+
+    ennemies.push_back(enemy);
+    return true;
+}
+
+std::size_t Stage::getEnemyIndexAt(int x, int y) const {
+    for (std::size_t i = 0; i < ennemies.size(); ++i) {
+        if (ennemies[i].getPosition() == sf::Vector2i(x, y)) {
+            return i;
+        }
+    }
+
+    return ennemies.size();
+}
+
+const AEnnemy* Stage::getEnemyAt(int x, int y) const {
+    const std::size_t index = getEnemyIndexAt(x, y);
+    if (index == ennemies.size()) {
+        return nullptr;
+    }
+
+    return &ennemies[index];
 }
 

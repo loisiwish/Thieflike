@@ -4,6 +4,8 @@
 
 #include <SFML/Graphics.hpp>
 
+#include <cstddef>
+
 class Game;
 
 namespace gameplay_renderer {
@@ -22,9 +24,19 @@ namespace gameplay_renderer {
         sf::RenderWindow* window;
         const Stage* stage;
         GridLayout grid;
+        sf::Font uiFont;
         sf::RectangleShape tile;
         sf::RectangleShape playerCell;
         sf::RectangleShape enemyCell;
+        sf::RectangleShape selectedGridCell;
+        sf::RectangleShape panelBackground;
+        float panelWidth;
+        std::size_t hoveredEnemyIndex;
+        std::size_t selectedEnemyIndex;
+        int selectedGridX;
+        int selectedGridY;
+        bool hasSelectedGrid;
+        bool uiFontLoaded;
 
         GameLoopContext();
     };
@@ -33,4 +45,11 @@ namespace gameplay_renderer {
     GameLoopContext initializeGameLoop(Game& game);
     bool listenGameEvents(Game& game, GameLoopContext& ctx);
     void drawStageGrid(GameLoopContext& ctx);
+    void drawEnemyList(GameLoopContext& ctx);
+    void updateEnemyListHover(GameLoopContext& ctx, int mouseX, int mouseY);
+    void updateEnemyHoverFromGrid(GameLoopContext& ctx, int mouseX, int mouseY);
+    void selectEnemyFromList(GameLoopContext& ctx, int mouseX, int mouseY);
+    void selectGridCell(GameLoopContext& ctx, int mouseX, int mouseY);
+    void moveSelectedGridCell(GameLoopContext& ctx, int deltaX, int deltaY);
+    void drawGridDetails(GameLoopContext& ctx);
 }

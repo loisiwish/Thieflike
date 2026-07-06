@@ -2,6 +2,8 @@
 
 #include "../units/player.hpp"
 #include "../units/ennemy.hpp"
+
+#include <cstddef>
 #include <vector>
 
 class Stage {
@@ -14,6 +16,10 @@ class Stage {
         const std::vector<std::vector<int>>& getMap() const { return map; }
         const Player& getPlayer() const { return player; }
         const std::vector<AEnnemy>& getEnnemies() const { return ennemies; }
+
+        bool addEnemy(const AEnnemy& enemy);
+        std::size_t getEnemyIndexAt(int x, int y) const;
+        const AEnnemy* getEnemyAt(int x, int y) const;
 
     private:
         Player player;
