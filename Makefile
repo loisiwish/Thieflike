@@ -5,6 +5,7 @@ TARGET = rogue
 SRC = src/main.cpp	\
 	src/window.cpp	\
 	src/loop.cpp	\
+	src/menu.cpp	\
 
 OBJ = $(SRC:.cpp=.o)
 

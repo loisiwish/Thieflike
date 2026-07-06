@@ -1,4 +1,5 @@
-#include "loop.hpp"
+#include "game.hpp"
+#include "menu.hpp"
 #include <SFML/Window/Keyboard.hpp>
 
 int get_Events(Game& game, sf::Keyboard::Key& keyPressed) {
@@ -44,6 +45,20 @@ int loop(Game& game) {
     sf::Keyboard::Key keyPressed;
     while (get_Events(game, keyPressed) == 0) {
         // Update game state and render
+        switch(game.getState()) {
+            case 0: // Menu state
+                // Render menu
+                show_Menu(game);
+                break;
+            case 1: // Playing state
+                // Update and render game
+                break;
+            case 2: // Paused state
+                // Render paused screen
+                break;
+            default:
+                break;
+        }
     }
 
     return 0;

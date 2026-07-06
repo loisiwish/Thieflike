@@ -11,8 +11,9 @@ class Game {
         }
         
         Window &getWindow() { return window; }
+        int getState() const { return state; }
 
     private:
         Window window;
-        int state; // Represents the current state of the game (e.g., menu, playing, paused). 0 for menu, 1 for playing, 2 for paused
+        int state; // Represents the current state of the game. 0 for menu, 1 for playing, 2 for paused
 };
