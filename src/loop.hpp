@@ -1,5 +1,5 @@
 #pragma once
 
-#include "window.hpp"
+#include "game.hpp"
 
-int loop(Window& window);
+int loop(Game& game);

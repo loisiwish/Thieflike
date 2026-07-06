@@ -3,8 +3,8 @@
 
 
 int main() {
-    Window window;
-    loop(window);
+    Game game;
+    loop(game);
 
     return 0;
 }

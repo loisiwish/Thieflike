@@ -11,4 +11,3 @@ Window::~Window() {
         window->close();
     }
 }
-
