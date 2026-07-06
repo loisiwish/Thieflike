@@ -11,6 +11,9 @@ class Gameplay {
         Gameplay() {}
         ~Gameplay() {}
 
+        Stage& getStage() { return stage; }
+        const Stage& getStage() const { return stage; }
+
     private:
         Stage stage;
         int StageDepth;

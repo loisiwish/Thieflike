@@ -6,13 +6,14 @@
 
 class Stage {
     public:
-        Stage() : stageDepth(1), stageWidth(10), stageHeight(10) {
-            // Initialize the player at the center of the stage
-            player.setPosition(0, stageHeight / 2);
-            // Initialize the map with zeros (empty spaces)
-            map.resize(stageHeight, std::vector<int>(stageWidth, 0));
-        }
+        Stage();
         ~Stage() {}
+
+        int getWidth() const { return stageWidth; }
+        int getHeight() const { return stageHeight; }
+        const std::vector<std::vector<int>>& getMap() const { return map; }
+        const Player& getPlayer() const { return player; }
+        const std::vector<AEnnemy>& getEnnemies() const { return ennemies; }
 
     private:
         Player player;
