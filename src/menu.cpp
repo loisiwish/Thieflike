@@ -1,61 +1,58 @@
 #include "menu.hpp"
 
-void draw_title(Game& game) {
-    sf::Font font;
-    if (!font.loadFromFile("assets/arial.ttf")) {
-        printf("Failed to load font\n");
-        return;
+#include <cstdio>
+
+namespace {
+    MenuUi g_menuUi;
+
+    void centerTextX(sf::Text& text, float y, const sf::Vector2u& size) {
+        const sf::FloatRect bounds = text.getLocalBounds();
+        text.setOrigin(bounds.left + (bounds.width / 2.f), bounds.top);
+        text.setPosition(size.x / 2.f, y);
     }
-    sf::Text title("Rogue", font, 50);
-    sf::Vector2u size = game.getWindow().getWindow()->getSize();
-    title.setPosition(size.x / 2.f - 80, 100);
-    game.getWindow().getWindow()->draw(title);
 }
 
-void draw_play_button(Game& game) {
-    sf::Font font;
-    if (!font.loadFromFile("assets/arial.ttf")) {
-        printf("Failed to load font\n");
-        return;
-    }
-    sf::Text playButton("Play", font, 30);
-    sf::Vector2u size = game.getWindow().getWindow()->getSize();
-    playButton.setPosition(size.x / 2.f - 40, 400);
-    game.getWindow().getWindow()->draw(playButton);
-}
 
-void draw_options_button(Game& game) {
-    sf::Font font;
-    if (!font.loadFromFile("assets/arial.ttf")) {
-        printf("Failed to load font\n");
-        return;
+bool init_Menu(Game& game) {
+    if (g_menuUi.initialized) {
+        return g_menuUi.fontLoaded;
     }
-    sf::Text optionsButton("Options", font, 30);
-    sf::Vector2u size = game.getWindow().getWindow()->getSize();
-    optionsButton.setPosition(size.x / 2.f - 50, 550);
-    game.getWindow().getWindow()->draw(optionsButton);
-}
 
-void draw_exit_button(Game& game) {
-    sf::Font font;
-    if (!font.loadFromFile("assets/arial.ttf")) {
-        printf("Failed to load font\n");
-        return;
+    g_menuUi.initialized = true;
+    if (!g_menuUi.font.loadFromFile("assets/arial.ttf")) {
+        std::printf("Failed to load font\n");
+        g_menuUi.fontLoaded = false;
+        return false;
     }
-    sf::Text exitButton("Exit", font, 30);
-    sf::Vector2u size = game.getWindow().getWindow()->getSize();
-    exitButton.setPosition(size.x / 2.f - 30, 700);
-    game.getWindow().getWindow()->draw(exitButton);
+
+    const sf::Vector2u size = game.getWindow().getWindow()->getSize();
+
+    g_menuUi.title = sf::Text("Rogue", g_menuUi.font, 50);
+    centerTextX(g_menuUi.title, 100.f, size);
+
+    g_menuUi.playButton = sf::Text("Play", g_menuUi.font, 30);
+    centerTextX(g_menuUi.playButton, 400.f, size);
+
+    g_menuUi.optionsButton = sf::Text("Options", g_menuUi.font, 30);
+    centerTextX(g_menuUi.optionsButton, 550.f, size);
+
+    g_menuUi.exitButton = sf::Text("Exit", g_menuUi.font, 30);
+    centerTextX(g_menuUi.exitButton, 700.f, size);
+
+    g_menuUi.fontLoaded = true;
+    return true;
 }
 
 void show_Menu(Game& game) {
-    // Render the menu screen
     sf::RenderWindow* window = game.getWindow().getWindow();
     window->clear(sf::Color::Black);
 
-    draw_title(game);
-    draw_play_button(game);
-    draw_options_button(game);
-    draw_exit_button(game);
+    if (init_Menu(game)) {
+        window->draw(g_menuUi.title);
+        window->draw(g_menuUi.playButton);
+        window->draw(g_menuUi.optionsButton);
+        window->draw(g_menuUi.exitButton);
+    }
+
     window->display();
 }

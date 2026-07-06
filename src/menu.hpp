@@ -2,7 +2,21 @@
 
 #include "game.hpp"
 
+bool init_Menu(Game& game);
 void show_Menu(Game& game);
+
+class MenuUi {
+    public:
+        MenuUi() : initialized(false), fontLoaded(false) {}
+
+        sf::Font font;
+        sf::Text title;
+        sf::Text playButton;
+        sf::Text optionsButton;
+        sf::Text exitButton;
+        bool initialized;
+        bool fontLoaded;
+};
 
 class Button {
     public:
