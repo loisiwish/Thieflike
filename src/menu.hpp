@@ -35,6 +35,7 @@ class MenuUi {
         sf::Text title;
         std::vector<Button> buttons;
         std::size_t selectedIndex;
+        bool hasSelection;
         bool initialized;
         bool fontLoaded;
 };

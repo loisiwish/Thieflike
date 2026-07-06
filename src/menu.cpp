@@ -35,11 +35,11 @@ bool Button::contains(const sf::Vector2f& point) const {
     return text.getGlobalBounds().contains(point);
 }
 
-MenuUi::MenuUi() : selectedIndex(0), initialized(false), fontLoaded(false) {}
+MenuUi::MenuUi() : selectedIndex(0), hasSelection(false), initialized(false), fontLoaded(false) {}
 
 void MenuUi::updateSelection() {
     for (std::size_t i = 0; i < buttons.size(); ++i) {
-        buttons[i].setSelected(i == selectedIndex);
+        buttons[i].setSelected(hasSelection && (i == selectedIndex));
     }
 }
 
@@ -71,6 +71,7 @@ bool init_Menu(Game& game) {
     g_menuUi.buttons[2].setCenteredPosition(size.x / 2.f, 700.f);
 
     g_menuUi.selectedIndex = 0;
+    g_menuUi.hasSelection = true;
     g_menuUi.updateSelection();
 
     g_menuUi.fontLoaded = true;
@@ -82,12 +83,26 @@ void menu_SelectNext() {
         return;
     }
 
+    if (!g_menuUi.hasSelection) {
+        g_menuUi.selectedIndex = 0;
+        g_menuUi.hasSelection = true;
+        g_menuUi.updateSelection();
+        return;
+    }
+
     g_menuUi.selectedIndex = (g_menuUi.selectedIndex + 1) % g_menuUi.buttons.size();
     g_menuUi.updateSelection();
 }
 
 void menu_SelectPrevious() {
     if (!g_menuUi.fontLoaded || g_menuUi.buttons.empty()) {
+        return;
+    }
+
+    if (!g_menuUi.hasSelection) {
+        g_menuUi.selectedIndex = g_menuUi.buttons.size() - 1;
+        g_menuUi.hasSelection = true;
+        g_menuUi.updateSelection();
         return;
     }
 
@@ -109,12 +124,18 @@ void menu_SelectHovered(Game& game, int mouseX, int mouseY) {
 
     for (std::size_t i = 0; i < g_menuUi.buttons.size(); ++i) {
         if (g_menuUi.buttons[i].contains(mousePos)) {
-            if (g_menuUi.selectedIndex != i) {
+            if (!g_menuUi.hasSelection || g_menuUi.selectedIndex != i) {
                 g_menuUi.selectedIndex = i;
+                g_menuUi.hasSelection = true;
                 g_menuUi.updateSelection();
             }
             return;
         }
+    }
+
+    if (g_menuUi.hasSelection) {
+        g_menuUi.hasSelection = false;
+        g_menuUi.updateSelection();
     }
 }
 
