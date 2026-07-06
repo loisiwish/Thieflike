@@ -12,29 +12,6 @@ namespace {
     }
 }
 
-Button::Button(const std::string& label, const sf::Font& font, unsigned int characterSize)
-    : text(label, font, characterSize) {
-    text.setFillColor(sf::Color::White);
-}
-
-void Button::setCenteredPosition(float centerX, float y) {
-    const sf::FloatRect bounds = text.getLocalBounds();
-    text.setOrigin(bounds.left + (bounds.width / 2.f), bounds.top);
-    text.setPosition(centerX, y);
-}
-
-void Button::setSelected(bool selected) {
-    text.setFillColor(selected ? sf::Color(255, 215, 0) : sf::Color::White);
-}
-
-void Button::draw(sf::RenderWindow& window) const {
-    window.draw(text);
-}
-
-bool Button::contains(const sf::Vector2f& point) const {
-    return text.getGlobalBounds().contains(point);
-}
-
 MenuUi::MenuUi() : selectedIndex(0), hasSelection(false), initialized(false), fontLoaded(false) {}
 
 void MenuUi::updateSelection() {
@@ -137,6 +114,53 @@ void menu_SelectHovered(Game& game, int mouseX, int mouseY) {
         g_menuUi.hasSelection = false;
         g_menuUi.updateSelection();
     }
+}
+
+
+int get_Events_Menu(Game& game, sf::Keyboard::Key& keyPressed) {
+    sf::Event event;
+    while (game.getWindow().getWindow()->pollEvent(event)) {
+        if (event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
+            game.getWindow().getWindow()->close();
+            return -1; // Indicate that the window was closed
+        }
+        if (event.type == sf::Event::KeyPressed) {
+            keyPressed = event.key.code;
+            switch (event.key.code) {
+                case sf::Keyboard::F11:
+                    game.getWindow().toggleFullscreen();
+                    break;
+
+                case sf::Keyboard::Z:
+                case sf::Keyboard::Up:
+                    if (game.getState() == 0) {
+                        menu_SelectPrevious();
+                    }
+                    break;
+                case sf::Keyboard::Q:
+                case sf::Keyboard::Left:
+                    // Handle Q key press
+                    break;
+                case sf::Keyboard::S:
+                case sf::Keyboard::Down:
+                    if (game.getState() == 0) {
+                        menu_SelectNext();
+                    }
+                    break;
+                case sf::Keyboard::D:
+                case sf::Keyboard::Right:
+                    // Handle D key press
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        if (event.type == sf::Event::MouseMoved && game.getState() == 0) {
+            menu_SelectHovered(game, event.mouseMove.x, event.mouseMove.y);
+        }
+    }
+    return 0; // Indicate that the loop should continue
 }
 
 void show_Menu(Game& game) {
