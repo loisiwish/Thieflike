@@ -4,9 +4,10 @@ TARGET = rogue
 
 SRC = src/main.cpp	\
 	src/window/window.cpp	\
-	src/window/loop.cpp	\
+	src/window/menu_loop.cpp	\
 	src/window/menu.cpp	\
-	
+	src/gameplay/stage.cpp	\
+	src/gameplay/game_loop.cpp	\
 
 OBJ = $(SRC:.cpp=.o)
 

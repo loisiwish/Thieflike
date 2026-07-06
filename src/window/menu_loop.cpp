@@ -3,7 +3,7 @@
 #include <SFML/Window/Keyboard.hpp>
 
 
-int loop(Game& game) {
+int menu_loop(Game& game) {
     // Main game loop
     sf::Keyboard::Key keyPressed;
     while (game.getWindow().getWindow()->isOpen()) {

@@ -2,4 +2,4 @@
 
 #include "game.hpp"
 
-int loop(Game& game);
+int menu_loop(Game& game);

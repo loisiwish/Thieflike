@@ -1,4 +1,5 @@
 #include "menu.hpp"
+#include "menu_loop.hpp"
 
 #include <cstdio>
 
@@ -136,10 +137,6 @@ int get_Events_Menu(Game& game, sf::Keyboard::Key& keyPressed) {
                     if (game.getState() == 0) {
                         menu_SelectPrevious();
                     }
-                    break;
-                case sf::Keyboard::Q:
-                case sf::Keyboard::Left:
-                    // Handle Q key press
                     break;
                 case sf::Keyboard::S:
                 case sf::Keyboard::Down:
