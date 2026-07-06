@@ -1,6 +1,7 @@
 #include "game.hpp"
 #include "menu.hpp"
 #include <SFML/Window/Keyboard.hpp>
+#include "../gameplay/game_loop.hpp"
 
 
 int menu_loop(Game& game) {
@@ -16,7 +17,8 @@ int menu_loop(Game& game) {
                 break;
             case 1: // Playing state
                 // Update and render game
-                break;
+                game_loop(game);
+                return 0;
             case 2: // Paused state
                 // Render paused screen
                 break;

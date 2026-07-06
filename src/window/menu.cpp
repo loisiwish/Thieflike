@@ -1,6 +1,7 @@
 #include "menu.hpp"
 #include "menu_loop.hpp"
-
+#include <SFML/Window/Keyboard.hpp>
+#include <SFML/Window/Mouse.hpp>
 #include <cstdio>
 
 namespace {
@@ -10,6 +11,25 @@ namespace {
         const sf::FloatRect bounds = text.getLocalBounds();
         text.setOrigin(bounds.left + (bounds.width / 2.f), bounds.top);
         text.setPosition(size.x / 2.f, y);
+    }
+
+    int activateSelectedMenuButton(Game& game) {
+        if (!g_menuUi.hasSelection) {
+            return 0;
+        }
+
+        switch (g_menuUi.selectedIndex) {
+            case 0: // Play
+                game.changeState(1);
+                return 0;
+            case 1: // Options
+                return 0;
+            case 2: // Exit
+                game.getWindow().getWindow()->close();
+                return -1;
+            default:
+                return 0;
+        }
     }
 }
 
@@ -147,26 +167,20 @@ int get_Events_Menu(Game& game, sf::Keyboard::Key& keyPressed) {
                 case sf::Keyboard::D:
                 case sf::Keyboard::Right:
                 case sf::Keyboard::Enter:
-                    if (game.getState() == 0 && g_menuUi.hasSelection) {
-                        // Handle menu selection based on the selected index
-                        switch (g_menuUi.selectedIndex) {
-                            case 0: // Play
-                                //game.changeState(1); // Change state to playing
-                                break;
-                            case 1: // Options
-                                // Handle options selection
-                                break;
-                            case 2: // Exit
-                                game.getWindow().getWindow()->close();
-                                return -1; // Indicate that the window was closed
-                            default:
-                                break;
-                        }
+                    if (game.getState() == 0) {
+                        return activateSelectedMenuButton(game);
                     }
                     break;
                 default:
                     break;
             }
+        }
+
+        if (event.type == sf::Event::MouseButtonPressed &&
+            event.mouseButton.button == sf::Mouse::Left &&
+            game.getState() == 0) {
+            menu_SelectHovered(game, event.mouseButton.x, event.mouseButton.y);
+            return activateSelectedMenuButton(game);
         }
 
         if (event.type == sf::Event::MouseMoved && game.getState() == 0) {
