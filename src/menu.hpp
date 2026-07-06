@@ -10,6 +10,7 @@ bool init_Menu(Game& game);
 void show_Menu(Game& game);
 void menu_SelectNext();
 void menu_SelectPrevious();
+void menu_SelectHovered(Game& game, int mouseX, int mouseY);
 
 class Button {
     public:
@@ -18,6 +19,7 @@ class Button {
         void setCenteredPosition(float centerX, float y);
         void setSelected(bool selected);
         void draw(sf::RenderWindow& window) const;
+        bool contains(const sf::Vector2f& point) const;
 
     private:
         sf::Text text;

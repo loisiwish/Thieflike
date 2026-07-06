@@ -31,6 +31,10 @@ void Button::draw(sf::RenderWindow& window) const {
     window.draw(text);
 }
 
+bool Button::contains(const sf::Vector2f& point) const {
+    return text.getGlobalBounds().contains(point);
+}
+
 MenuUi::MenuUi() : selectedIndex(0), initialized(false), fontLoaded(false) {}
 
 void MenuUi::updateSelection() {
@@ -93,6 +97,25 @@ void menu_SelectPrevious() {
         --g_menuUi.selectedIndex;
     }
     g_menuUi.updateSelection();
+}
+
+void menu_SelectHovered(Game& game, int mouseX, int mouseY) {
+    if (!g_menuUi.fontLoaded || g_menuUi.buttons.empty()) {
+        return;
+    }
+
+    sf::RenderWindow* window = game.getWindow().getWindow();
+    const sf::Vector2f mousePos = window->mapPixelToCoords(sf::Vector2i(mouseX, mouseY));
+
+    for (std::size_t i = 0; i < g_menuUi.buttons.size(); ++i) {
+        if (g_menuUi.buttons[i].contains(mousePos)) {
+            if (g_menuUi.selectedIndex != i) {
+                g_menuUi.selectedIndex = i;
+                g_menuUi.updateSelection();
+            }
+            return;
+        }
+    }
 }
 
 void show_Menu(Game& game) {

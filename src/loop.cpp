@@ -40,6 +40,10 @@ int get_Events(Game& game, sf::Keyboard::Key& keyPressed) {
                     break;
             }
         }
+
+        if (event.type == sf::Event::MouseMoved && game.getState() == 0) {
+            menu_SelectHovered(game, event.mouseMove.x, event.mouseMove.y);
+        }
     }
     return 0; // Indicate that the loop should continue
 }
