@@ -149,7 +149,23 @@ int get_Events_Menu(Game& game, sf::Keyboard::Key& keyPressed) {
                     break;
                 case sf::Keyboard::D:
                 case sf::Keyboard::Right:
-                    // Handle D key press
+                case sf::Keyboard::Enter:
+                    if (game.getState() == 0 && g_menuUi.hasSelection) {
+                        // Handle menu selection based on the selected index
+                        switch (g_menuUi.selectedIndex) {
+                            case 0: // Play
+                                //game.changeState(1); // Change state to playing
+                                break;
+                            case 1: // Options
+                                // Handle options selection
+                                break;
+                            case 2: // Exit
+                                game.getWindow().getWindow()->close();
+                                return -1; // Indicate that the window was closed
+                            default:
+                                break;
+                        }
+                    }
                     break;
                 default:
                     break;

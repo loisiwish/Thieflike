@@ -12,6 +12,7 @@ class Game {
         
         Window &getWindow() { return window; }
         int getState() const { return state; }
+        void changeState(int newState) { state = newState; }
 
     private:
         Window window;
