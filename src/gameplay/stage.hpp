@@ -20,6 +20,7 @@ class Stage {
         bool addEnemy(const AEnnemy& enemy);
         std::size_t getEnemyIndexAt(int x, int y) const;
         const AEnnemy* getEnemyAt(int x, int y) const;
+        bool movePlayerBy(int deltaX, int deltaY);
 
     private:
         Player player;

@@ -231,6 +231,18 @@ namespace gameplay_renderer {
                     game.changeState(0);
                     return false;
                 }
+                if (event.key.code == sf::Keyboard::Q) {
+                    ctx.stage->movePlayerBy(-1, 0);
+                }
+                if (event.key.code == sf::Keyboard::D) {
+                    ctx.stage->movePlayerBy(1, 0);
+                }
+                if (event.key.code == sf::Keyboard::Z) {
+                    ctx.stage->movePlayerBy(0, -1);
+                }
+                if (event.key.code == sf::Keyboard::S) {
+                    ctx.stage->movePlayerBy(0, 1);
+                }
                 if (event.key.code == sf::Keyboard::Left) {
                     moveSelectedGridCell(ctx, -1, 0);
                 }

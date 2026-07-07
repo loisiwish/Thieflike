@@ -22,7 +22,7 @@ namespace gameplay_renderer {
 
     struct GameLoopContext {
         sf::RenderWindow* window;
-        const Stage* stage;
+        Stage* stage;
         GridLayout grid;
         sf::Font uiFont;
         sf::RectangleShape tile;

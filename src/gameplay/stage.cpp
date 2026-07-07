@@ -50,3 +50,20 @@ const AEnnemy* Stage::getEnemyAt(int x, int y) const {
     return &ennemies[index];
 }
 
+bool Stage::movePlayerBy(int deltaX, int deltaY) {
+    const sf::Vector2i currentPos = player.getPosition();
+    const int targetX = currentPos.x + deltaX;
+    const int targetY = currentPos.y + deltaY;
+
+    if (targetX < 0 || targetY < 0 || targetX >= stageWidth || targetY >= stageHeight) {
+        return false;
+    }
+
+    if (getEnemyAt(targetX, targetY) != nullptr) {
+        return false;
+    }
+
+    player.setPosition(targetX, targetY);
+    return true;
+}
+
