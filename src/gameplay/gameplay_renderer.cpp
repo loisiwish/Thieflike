@@ -251,21 +251,26 @@ namespace gameplay_renderer {
             }
 
             if (event.type == sf::Event::KeyPressed) {
+                bool playerAction = false;
                 if (event.key.code == sf::Keyboard::Escape) {
                     game.changeState(0);
                     return false;
                 }
                 if (event.key.code == sf::Keyboard::Q) {
                     ctx.stage->movePlayerBy(-1, 0);
+                    playerAction = true;
                 }
                 if (event.key.code == sf::Keyboard::D) {
                     ctx.stage->movePlayerBy(1, 0);
+                    playerAction = true;
                 }
                 if (event.key.code == sf::Keyboard::Z) {
                     ctx.stage->movePlayerBy(0, -1);
+                    playerAction = true;
                 }
                 if (event.key.code == sf::Keyboard::S) {
                     ctx.stage->movePlayerBy(0, 1);
+                    playerAction = true;
                 }
                 if (event.key.code == sf::Keyboard::Left) {
                     moveSelectedGridCell(ctx, -1, 0);
@@ -284,59 +289,18 @@ namespace gameplay_renderer {
                     ctx.window = game.getWindow().getWindow();
                     updateGridLayout(ctx);
                 }
+
+                if (playerAction && ctx.stage->getEnnemies().empty()) {
+                    ctx.stage->advanceDepth();
+                    ctx.selectedEnemyIndex = std::numeric_limits<std::size_t>::max();
+                    ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
+                    ctx.hasSelectedGrid = false;
+                    updateGridLayout(ctx);
+                }
             }
         }
 
         return true;
-    }
-
-    void drawStageGrid(GameLoopContext& ctx) {
-        if (!ctx.grid.valid) {
-            return;
-        }
-
-        const std::vector<std::vector<Stage::TileType>>& map = ctx.stage->getMap();
-        const sf::Vector2i playerPos = ctx.stage->getPlayer().getPosition();
-
-        for (int y = 0; y < ctx.grid.stageHeight; ++y) {
-            for (int x = 0; x < ctx.grid.stageWidth; ++x) {
-                const Stage::TileType tileType = map[y][x];
-                const bool inVision = ctx.stage->hasLineOfSight(playerPos.x, playerPos.y, x, y);
-                if (!inVision) {
-                    ctx.tile.setFillColor(sf::Color(95, 95, 95));
-                } else if (tileType == Stage::Water) {
-                    ctx.tile.setFillColor(sf::Color(45, 110, 170));
-                } else if (tileType == Stage::Wall) {
-                    ctx.tile.setFillColor(sf::Color::Black);
-                } else {
-                    ctx.tile.setFillColor(sf::Color(45, 150, 55));
-                }
-                ctx.tile.setPosition(ctx.grid.offsetX + (x * ctx.grid.cellSize),
-                                     ctx.grid.offsetY + (y * ctx.grid.cellSize));
-                ctx.window->draw(ctx.tile);
-            }
-        }
-
-        ctx.playerCell.setPosition(ctx.grid.offsetX + (static_cast<float>(playerPos.x) * ctx.grid.cellSize) + 1.f,
-                                   ctx.grid.offsetY + (static_cast<float>(playerPos.y) * ctx.grid.cellSize) + 1.f);
-        ctx.window->draw(ctx.playerCell);
-
-        const std::vector<AEnnemy>& ennemies = ctx.stage->getEnnemies();
-        for (std::size_t i = 0; i < ennemies.size(); ++i) {
-            const sf::Vector2i enemyPos = ennemies[i].getPosition();
-            if (!ctx.stage->hasLineOfSight(playerPos.x, playerPos.y, enemyPos.x, enemyPos.y)) {
-                continue;
-            }
-            ctx.enemyCell.setPosition(ctx.grid.offsetX + (static_cast<float>(enemyPos.x) * ctx.grid.cellSize) + 1.f,
-                                      ctx.grid.offsetY + (static_cast<float>(enemyPos.y) * ctx.grid.cellSize) + 1.f);
-            ctx.window->draw(ctx.enemyCell);
-        }
-
-        if (ctx.hasSelectedGrid) {
-            ctx.selectedGridCell.setPosition(ctx.grid.offsetX + (static_cast<float>(ctx.selectedGridX) * ctx.grid.cellSize),
-                                             ctx.grid.offsetY + (static_cast<float>(ctx.selectedGridY) * ctx.grid.cellSize));
-            ctx.window->draw(ctx.selectedGridCell);
-        }
     }
 
     void drawEnemyList(GameLoopContext& ctx) {
@@ -349,7 +313,11 @@ namespace gameplay_renderer {
         const float contentX = panelX + 8.f;
         const float contentWidth = ctx.panelWidth - 16.f;
         const float maxY = static_cast<float>(windowSize.y) - 20.f;
-        const float gridDetailsTop = 170.f;
+        const float gridDetailsTop = 185.f;
+        const std::size_t rowsPerColumn = 4;
+        const float firstItemY = 70.f;
+        const float itemHeight = 30.f;
+        const float columnGap = 10.f;
         ctx.panelBackground.setPosition(panelX, 0.f);
         ctx.panelBackground.setSize(sf::Vector2f(ctx.panelWidth, static_cast<float>(windowSize.y)));
         ctx.window->draw(ctx.panelBackground);
@@ -366,11 +334,21 @@ namespace gameplay_renderer {
                                               ctx.stage->hasLineOfSight(playerPos.x, playerPos.y, ctx.selectedGridX, ctx.selectedGridY))
                                                  ? ctx.stage->getEnemyAt(ctx.selectedGridX, ctx.selectedGridY)
                                                  : nullptr;
-        float currentY = 70.f;
+
+        const std::size_t columnCount = std::max<std::size_t>(
+            1,
+            (visibleEnemyIndices.size() + rowsPerColumn - 1) / rowsPerColumn);
+        const float totalGapWidth = columnGap * static_cast<float>(columnCount - 1);
+        const float columnWidth = (contentWidth - totalGapWidth) / static_cast<float>(columnCount);
+
         for (std::size_t row = 0; row < visibleEnemyIndices.size(); ++row) {
             const std::size_t i = visibleEnemyIndices[row];
             const AEnnemy& enemy = ennemies[i];
             const sf::Vector2i position = enemy.getPosition();
+            const std::size_t column = row / rowsPerColumn;
+            const std::size_t rowInColumn = row % rowsPerColumn;
+            const float entryX = contentX + (static_cast<float>(column) * (columnWidth + columnGap));
+            const float entryY = firstItemY + (static_cast<float>(rowInColumn) * itemHeight);
 
             const std::string label = std::to_string(i + 1) + ". " +
                                       enemy.getName() + " (" +
@@ -378,7 +356,7 @@ namespace gameplay_renderer {
                                       std::to_string(position.y) + ") HP:" +
                                       std::to_string(enemy.getHealth());
 
-            sf::Text entry(wrapTextToWidth(label, ctx.uiFont, 20, contentWidth), ctx.uiFont, 20);
+            sf::Text entry(wrapTextToWidth(label, ctx.uiFont, 20, std::max(40.f, columnWidth - 4.f)), ctx.uiFont, 20);
             if (ctx.selectedEnemyIndex == i) {
                 entry.setFillColor(sf::Color(255, 215, 0));
             } else if (ctx.hoveredEnemyIndex == i) {
@@ -386,13 +364,8 @@ namespace gameplay_renderer {
             } else {
                 entry.setFillColor(sf::Color(220, 220, 220));
             }
-            entry.setPosition(contentX, currentY);
+            entry.setPosition(entryX, entryY);
             ctx.window->draw(entry);
-
-            currentY += std::max(30.f, entry.getLocalBounds().height + 8.f);
-            if (currentY > gridDetailsTop - 10.f) {
-                break;
-            }
         }
 
         float gridY = gridDetailsTop;
@@ -454,7 +427,7 @@ namespace gameplay_renderer {
             ctx.window->draw(hint);
         }
 
-        const float selectedEnemyTop = gridY + (ctx.hasSelectedGrid ? 148.f : 36.f);
+        const float selectedEnemyTop = gridY + (ctx.hasSelectedGrid ? 160.f : 48.f);
 
         if (selectedEnemyTop > maxY || enemyOnSelectedCell == nullptr) {
             return;
@@ -518,21 +491,62 @@ namespace gameplay_renderer {
 
         const sf::Vector2u windowSize = ctx.window->getSize();
         const float panelX = static_cast<float>(windowSize.x) - ctx.panelWidth;
+        const float contentX = panelX + 8.f;
+        const float contentWidth = ctx.panelWidth - 16.f;
         const float mouseLocalX = static_cast<float>(mouseX);
         const float mouseLocalY = static_cast<float>(mouseY);
+        const std::size_t rowsPerColumn = 4;
+        const float firstItemY = 70.f;
+        const float itemHeight = 30.f;
+        const float columnGap = 10.f;
 
-        if (mouseLocalX < panelX || mouseLocalY < 70.f) {
+        if (mouseLocalX < panelX || mouseLocalY < firstItemY) {
             ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
             return;
         }
 
         const std::vector<std::size_t> visibleEnemyIndices = getVisibleEnemyIndices(*ctx.stage);
-        const float itemHeight = 30.f;
-        const float firstItemY = 70.f;
-        const float relativeY = mouseLocalY - firstItemY;
-        const std::size_t hoveredRow = static_cast<std::size_t>(relativeY / itemHeight);
-        if (hoveredRow < visibleEnemyIndices.size()) {
-            ctx.hoveredEnemyIndex = visibleEnemyIndices[hoveredRow];
+        if (visibleEnemyIndices.empty()) {
+            ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
+            return;
+        }
+
+        const std::size_t columnCount = std::max<std::size_t>(
+            1,
+            (visibleEnemyIndices.size() + rowsPerColumn - 1) / rowsPerColumn);
+        const float totalGapWidth = columnGap * static_cast<float>(columnCount - 1);
+        const float columnWidth = (contentWidth - totalGapWidth) / static_cast<float>(columnCount);
+        const float listHeight = itemHeight * static_cast<float>(rowsPerColumn);
+
+        if (mouseLocalX < contentX || mouseLocalX > contentX + contentWidth ||
+            mouseLocalY > firstItemY + listHeight || columnWidth <= 0.f) {
+            ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
+            return;
+        }
+
+        const float localX = mouseLocalX - contentX;
+        const float localY = mouseLocalY - firstItemY;
+        const std::size_t column = static_cast<std::size_t>(localX / (columnWidth + columnGap));
+        if (column >= columnCount) {
+            ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
+            return;
+        }
+
+        const float inColumnX = localX - (static_cast<float>(column) * (columnWidth + columnGap));
+        if (inColumnX < 0.f || inColumnX > columnWidth) {
+            ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
+            return;
+        }
+
+        const std::size_t rowInColumn = static_cast<std::size_t>(localY / itemHeight);
+        if (rowInColumn >= rowsPerColumn) {
+            ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
+            return;
+        }
+
+        const std::size_t hoveredFlatIndex = (column * rowsPerColumn) + rowInColumn;
+        if (hoveredFlatIndex < visibleEnemyIndices.size()) {
+            ctx.hoveredEnemyIndex = visibleEnemyIndices[hoveredFlatIndex];
         } else {
             ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
         }

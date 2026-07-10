@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <queue>
 #include <random>
 
 Stage::Stage() : stageDepth(0), stageWidth(10), stageHeight(10) {
@@ -27,13 +28,9 @@ void Stage::regenerateForDepth() {
     ennemies.clear();
 
     const sf::Vector2i playerSpawn(1, stageHeight / 2);
-    const sf::Vector2i enemySpawnTopLeft(1, 1);
-    const sf::Vector2i enemySpawnBottomRight(stageWidth - 2, stageHeight - 2);
 
     auto isReservedCell = [&](int x, int y) {
-        return (x == playerSpawn.x && y == playerSpawn.y) ||
-               (x == enemySpawnTopLeft.x && y == enemySpawnTopLeft.y) ||
-               (x == enemySpawnBottomRight.x && y == enemySpawnBottomRight.y);
+        return (x == playerSpawn.x && y == playerSpawn.y);
     };
 
     std::mt19937 randomEngine(std::random_device{}());
@@ -44,9 +41,9 @@ void Stage::regenerateForDepth() {
     const int reservedCells = 3;
     const int maxObstacleCells = std::max(0, totalCells - reservedCells);
 
-    // Increase obstacle density with depth but keep enough free space.
-    const float waterRatio = std::min(0.08f + (0.012f * static_cast<float>(stageDepth)), 0.22f);
-    const float wallRatio = std::min(0.06f + (0.014f * static_cast<float>(stageDepth)), 0.30f);
+    // Keep terrain generation stable across depth.
+    const float waterRatio = 0.10f;
+    const float wallRatio = 0.08f;
     int targetWaterCells = std::max(1, static_cast<int>(static_cast<float>(totalCells) * waterRatio));
     int targetWallCells = std::max(1, static_cast<int>(static_cast<float>(totalCells) * wallRatio));
     if (targetWaterCells + targetWallCells > maxObstacleCells) {
@@ -79,22 +76,85 @@ void Stage::regenerateForDepth() {
     placeRandomTiles(Water, targetWaterCells);
     placeRandomTiles(Wall, targetWallCells);
 
-    // Always keep spawn positions traversable.
+    // Always keep player spawn traversable.
     map[playerSpawn.y][playerSpawn.x] = Grass;
-    map[enemySpawnTopLeft.y][enemySpawnTopLeft.x] = Grass;
-    map[enemySpawnBottomRight.y][enemySpawnBottomRight.x] = Grass;
 
     // Spawn player.
     player.setPosition(playerSpawn.x, playerSpawn.y);
 
-    // Spawn two rats.
-    Rat ratTopLeft;
-    ratTopLeft.setPosition(enemySpawnTopLeft.x, enemySpawnTopLeft.y);
-    addEnemy(ratTopLeft);
+    // Compute the walkable region connected to player spawn.
+    std::vector<std::vector<bool>> reachable(stageHeight, std::vector<bool>(stageWidth, false));
+    if (map[playerSpawn.y][playerSpawn.x] == Grass) {
+        std::queue<sf::Vector2i> frontier;
+        frontier.push(playerSpawn);
+        reachable[playerSpawn.y][playerSpawn.x] = true;
 
-    Rat ratBottomRight;
-    ratBottomRight.setPosition(enemySpawnBottomRight.x, enemySpawnBottomRight.y);
-    addEnemy(ratBottomRight);
+        const int offsetX[4] = {1, -1, 0, 0};
+        const int offsetY[4] = {0, 0, 1, -1};
+        while (!frontier.empty()) {
+            const sf::Vector2i current = frontier.front();
+            frontier.pop();
+
+            for (int i = 0; i < 4; ++i) {
+                const int nextX = current.x + offsetX[i];
+                const int nextY = current.y + offsetY[i];
+                if (nextX < 0 || nextY < 0 || nextX >= stageWidth || nextY >= stageHeight) {
+                    continue;
+                }
+                if (reachable[nextY][nextX]) {
+                    continue;
+                }
+                if (map[nextY][nextX] != Grass) {
+                    continue;
+                }
+
+                reachable[nextY][nextX] = true;
+                frontier.push(sf::Vector2i(nextX, nextY));
+            }
+        }
+    }
+
+    // Depth controls enemy count and composition.
+    const int targetEnemyCount = 2 + stageDepth;
+    const int maxEnemyCount = std::max(1, totalCells / 3);
+    const int enemyCount = std::min(targetEnemyCount, maxEnemyCount);
+    const float goblinChance = std::min(0.15f * static_cast<float>(stageDepth), 0.80f);
+    std::uniform_real_distribution<float> randomChance(0.f, 1.f);
+
+    int spawned = 0;
+    int attempts = 0;
+    const int maxAttempts = totalCells * 40;
+    while (spawned < enemyCount && attempts < maxAttempts) {
+        ++attempts;
+        const int x = randomX(randomEngine);
+        const int y = randomY(randomEngine);
+        if (isReservedCell(x, y)) {
+            continue;
+        }
+        if (!isWalkableTile(x, y)) {
+            continue;
+        }
+        if (!reachable[y][x]) {
+            continue;
+        }
+        if (getEnemyAt(x, y) != nullptr) {
+            continue;
+        }
+
+        if (randomChance(randomEngine) < goblinChance) {
+            Goblin goblin;
+            goblin.setPosition(x, y);
+            if (addEnemy(goblin)) {
+                ++spawned;
+            }
+        } else {
+            Rat rat;
+            rat.setPosition(x, y);
+            if (addEnemy(rat)) {
+                ++spawned;
+            }
+        }
+    }
 }
 
 bool Stage::addEnemy(const AEnnemy& enemy) {
@@ -196,8 +256,19 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
     const int targetX = currentPos.x + deltaX;
     const int targetY = currentPos.y + deltaY;
 
-    if (getEnemyAt(targetX, targetY) != nullptr) {
-        return false;
+    const std::size_t enemyIndex = getEnemyIndexAt(targetX, targetY);
+    if (enemyIndex != ennemies.size()) {
+        AEnnemy& targetEnemy = ennemies[enemyIndex];
+        const int damage = std::max(0, player.getAttack() - targetEnemy.getDefense());
+        targetEnemy.takeDamage(damage);
+
+        if (targetEnemy.getHealth() <= 0) {
+            ennemies.erase(ennemies.begin() + static_cast<std::vector<AEnnemy>::difference_type>(enemyIndex));
+            if (isWalkableTile(targetX, targetY)) {
+                player.setPosition(targetX, targetY);
+            }
+        }
+        return true;
     }
 
     if (!isWalkableTile(targetX, targetY)) {
