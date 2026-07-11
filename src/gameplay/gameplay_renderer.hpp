@@ -36,6 +36,10 @@ namespace gameplay_renderer {
         int selectedGridX;
         int selectedGridY;
         bool hasSelectedGrid;
+        bool inventoryScreenOpen;
+        bool inventorySelectingBackpack;
+        int inventorySelectedBackpackIndex;
+        int inventorySelectedEquippedIndex;
         bool uiFontLoaded;
 
         GameLoopContext();
@@ -46,6 +50,7 @@ namespace gameplay_renderer {
     bool listenGameEvents(Game& game, GameLoopContext& ctx);
     void drawStageGrid(GameLoopContext& ctx);
     void drawEnemyList(GameLoopContext& ctx);
+    void drawInventoryScreen(GameLoopContext& ctx);
     void updateEnemyListHover(GameLoopContext& ctx, int mouseX, int mouseY);
     void updateEnemyHoverFromGrid(GameLoopContext& ctx, int mouseX, int mouseY);
     void selectEnemyFromList(GameLoopContext& ctx, int mouseX, int mouseY);

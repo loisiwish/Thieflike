@@ -11,8 +11,12 @@ void game_loop(Game& game) {
         }
 
         ctx.window->clear(sf::Color(20, 20, 20));
-        gameplay_renderer::drawStageGrid(ctx);
-        gameplay_renderer::drawEnemyList(ctx);
+        if (ctx.inventoryScreenOpen) {
+            gameplay_renderer::drawInventoryScreen(ctx);
+        } else {
+            gameplay_renderer::drawStageGrid(ctx);
+            gameplay_renderer::drawEnemyList(ctx);
+        }
         ctx.window->display();
     }
 }

@@ -24,6 +24,7 @@ class Stage {
         int getWidth() const { return stageWidth; }
         int getHeight() const { return stageHeight; }
         const std::vector<std::vector<TileType>>& getMap() const { return map; }
+        Player& getPlayer() { return player; }
         const Player& getPlayer() const { return player; }
         const std::vector<AEnnemy>& getEnnemies() const { return ennemies; }
 

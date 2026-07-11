@@ -1,19 +1,6 @@
 #pragma once
 #include <SFML/System/Vector2.hpp>
-#include <string>
-#include <vector>
-
-class Inventory {
-    public:
-        Inventory() {}
-        ~Inventory() {}
-
-        void addItem(const std::string& item) { items.push_back(item); }
-        const std::vector<std::string>& getItems() const { return items; }
-
-    private:
-        std::vector<std::string> items;
-};
+#include "../items/inventory.hpp"
 
 class Player {
     public:
@@ -26,17 +13,18 @@ class Player {
         void setPosition(int x, int y) { position = sf::Vector2i(x, y); }
         sf::Vector2i getPosition() const { return position; }
         Inventory& getInventory() { return inventory; }
+        const Inventory& getInventory() const { return inventory; }
         int get_damaged(int damage) {
-            int effective_damage = damage - base_defense;
+            int effective_damage = damage - getDefense();
             if (effective_damage < 0) effective_damage = 0;
             health -= effective_damage;
             return effective_damage;
         }
-        int getAttack() const { return base_attack; }
-        int getDefense() const { return base_defense; }
-        int getRange() const { return base_range; }
+        int getAttack() const { return base_attack + inventory.getTotalAttackBonus(); }
+        int getDefense() const { return base_defense + inventory.getTotalDefenseBonus(); }
+        int getRange() const { return base_range + inventory.getTotalRangeBonus(); }
         int getLevel() const { return level; }
-        int getMoveSpeed() const { return move_speed; }
+        int getMoveSpeed() const { return move_speed + inventory.getTotalMoveSpeedBonus(); }
         void setMoveSpeed(int speed) { move_speed = speed; }
         void setLevel(int level) { this->level = level; }
         void setAttack(int attack) { base_attack = attack; }
