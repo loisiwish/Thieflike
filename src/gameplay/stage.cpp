@@ -263,6 +263,8 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
         targetEnemy.takeDamage(damage);
 
         if (targetEnemy.getHealth() <= 0) {
+            targetEnemy.dropExperience(player);
+            while (player.checkLevelUp()) {}
             ennemies.erase(ennemies.begin() + static_cast<std::vector<AEnnemy>::difference_type>(enemyIndex));
             if (isWalkableTile(targetX, targetY)) {
                 player.setPosition(targetX, targetY);

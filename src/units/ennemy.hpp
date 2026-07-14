@@ -24,6 +24,7 @@ class IEnnemy {
         virtual void setRange(int range) = 0;
         virtual int dealDamage(Player& player) const = 0;
         virtual sf::Vector2i getPosition() const = 0;
+        virtual float dropExperience(Player& player) const = 0;
 };
 
 class AEnnemy : public IEnnemy {
@@ -55,6 +56,7 @@ class AEnnemy : public IEnnemy {
         std::string getDescription() const override { return description; }
         void setName(const std::string& n) { name = n; }
         void setDescription(const std::string& d) { description = d; }
+        float dropExperience(Player& player) const override { float exp = static_cast<float>(level) * 5.0f * experienceMultiplier; player.addExperience(exp); return exp; }
 
     private:
         int health;
@@ -66,6 +68,7 @@ class AEnnemy : public IEnnemy {
         int base_range;
         std::string name;
         std::string description;
+        float experienceMultiplier = 1.0f; // Multiplier for experience dropped, can be adjusted based on enemy type
 };
 
 class Rat: public AEnnemy {

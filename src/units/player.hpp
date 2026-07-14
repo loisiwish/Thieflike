@@ -4,7 +4,7 @@
 
 class Player {
     public:
-        Player() : health(10), position(0, 0), level(1), move_speed(1), base_attack(3), base_defense(1), base_range(1) {}
+        Player() : health(10), position(0, 0), level(1), move_speed(1), base_attack(3), base_defense(1), base_range(1), experience(0), experienceToNextLevel(10) {}
         ~Player() {}
 
         void setHealth(int h) { health = h; }
@@ -30,6 +30,18 @@ class Player {
         void setAttack(int attack) { base_attack = attack; }
         void setDefense(int defense) { base_defense = defense; }
         void setRange(int range) { base_range = range; }
+        float getExperience() const { return experience; }
+        int getExperienceToNextLevel() const { return experienceToNextLevel; }
+        void addExperience(float exp) { experience += exp; }
+        bool checkLevelUp() {
+            if (experience >= static_cast<float>(experienceToNextLevel)) {
+                level++;
+                experience -= static_cast<float>(experienceToNextLevel);
+                experienceToNextLevel = static_cast<int>(static_cast<float>(experienceToNextLevel) * 1.2f);
+                return true;
+            }
+            return false;
+        }
 
     private:
         int health;
@@ -40,4 +52,6 @@ class Player {
         int base_attack;
         int base_defense;
         int base_range;
+        float experience;
+        int experienceToNextLevel;
 };

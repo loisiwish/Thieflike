@@ -711,7 +711,10 @@ namespace gameplay_renderer {
             " | ATK " + std::to_string(player.getAttack()) +
             " | DEF " + std::to_string(player.getDefense()) +
             " | RNG " + std::to_string(player.getRange()) +
-            " | SPD " + std::to_string(player.getMoveSpeed());
+            " | SPD " + std::to_string(player.getMoveSpeed()) +
+            " | LVL " + std::to_string(player.getLevel()) +
+            " | EXP " + std::to_string(static_cast<int>(player.getExperience())) +
+            "/" + std::to_string(player.getExperienceToNextLevel());
 
         sf::Text stats(statsLine, ctx.uiFont, 20);
         stats.setFillColor(sf::Color(230, 210, 140));
