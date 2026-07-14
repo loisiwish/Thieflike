@@ -35,7 +35,7 @@ class Stage {
         bool isWalkableTile(int x, int y) const;
         bool blocksVision(int x, int y) const;
         bool hasLineOfSight(int fromX, int fromY, int toX, int toY) const;
-        bool canRangedAttack(int fromX, int fromY, int toX, int toY) const;
+        bool canRangedAttack(int fromX, int fromY, int toX, int toY, Player &player) const;
         bool movePlayerBy(int deltaX, int deltaY);
 
     private:

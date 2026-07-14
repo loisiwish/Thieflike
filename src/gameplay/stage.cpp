@@ -243,8 +243,11 @@ bool Stage::hasLineOfSight(int fromX, int fromY, int toX, int toY) const {
     return true;
 }
 
-bool Stage::canRangedAttack(int fromX, int fromY, int toX, int toY) const {
+bool Stage::canRangedAttack(int fromX, int fromY, int toX, int toY, Player &player) const {
     if (blocksVision(toX, toY)) {
+        return false;
+    }
+    if (player.getRange() < std::max(std::abs(toX - fromX), std::abs(toY - fromY))) {
         return false;
     }
 

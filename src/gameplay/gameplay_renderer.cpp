@@ -132,8 +132,22 @@ namespace gameplay_renderer {
                 return;
             }
 
-            Inventory& inventory = ctx.stage->getPlayer().getInventory();
+            Player& player = ctx.stage->getPlayer();
+            Inventory& inventory = player.getInventory();
             clampInventorySelection(ctx);
+
+            if (keyCode == sf::Keyboard::Num1 || keyCode == sf::Keyboard::Numpad1) {
+                player.spendSkillPointOnAttack();
+                return;
+            }
+            if (keyCode == sf::Keyboard::Num2 || keyCode == sf::Keyboard::Numpad2) {
+                player.spendSkillPointOnDefense();
+                return;
+            }
+            if (keyCode == sf::Keyboard::Num3 || keyCode == sf::Keyboard::Numpad3) {
+                player.spendSkillPointOnEndurance();
+                return;
+            }
 
             if (keyCode == sf::Keyboard::Left) {
                 ctx.inventorySelectingBackpack = false;
@@ -575,7 +589,7 @@ namespace gameplay_renderer {
             const Stage::TileType tileType = map[cellY][cellX];
             const sf::Vector2i playerPos = ctx.stage->getPlayer().getPosition();
             const bool inVision = ctx.stage->hasLineOfSight(playerPos.x, playerPos.y, cellX, cellY);
-            const bool canShoot = ctx.stage->canRangedAttack(playerPos.x, playerPos.y, cellX, cellY);
+            const bool canShoot = ctx.stage->canRangedAttack(playerPos.x, playerPos.y, cellX, cellY, ctx.stage->getPlayer());
 
             const bool hasPlayer = (playerPos == sf::Vector2i(cellX, cellY));
 
@@ -697,7 +711,7 @@ namespace gameplay_renderer {
         title.setPosition(contentX, contentY);
         ctx.window->draw(title);
 
-        sf::Text hint("Tab/I: close | Left/Right: panel | Up/Down: select | Enter: equip/unequip", ctx.uiFont, 18);
+        sf::Text hint("Tab/I: close | Left/Right: panel | Up/Down: select | Enter: equip/unequip | 1-3: spend skill point", ctx.uiFont, 18);
         hint.setFillColor(sf::Color(180, 180, 180));
         hint.setPosition(contentX, contentY + 46.f);
         ctx.window->draw(hint);
@@ -712,9 +726,11 @@ namespace gameplay_renderer {
             " | DEF " + std::to_string(player.getDefense()) +
             " | RNG " + std::to_string(player.getRange()) +
             " | SPD " + std::to_string(player.getMoveSpeed()) +
+            " | END " + std::to_string(player.getEndurance()) +
             " | LVL " + std::to_string(player.getLevel()) +
             " | EXP " + std::to_string(static_cast<int>(player.getExperience())) +
-            "/" + std::to_string(player.getExperienceToNextLevel());
+            "/" + std::to_string(player.getExperienceToNextLevel()) +
+            " | SP " + std::to_string(player.getSkillPoints());
 
         sf::Text stats(statsLine, ctx.uiFont, 20);
         stats.setFillColor(sf::Color(230, 210, 140));
@@ -744,6 +760,34 @@ namespace gameplay_renderer {
             entry.setPosition(contentX, leftY);
             ctx.window->draw(entry);
             leftY += 28.f;
+        }
+
+        leftY += 12.f;
+        sf::Text skillsHeader("Skill Allocation", ctx.uiFont, 24);
+        skillsHeader.setFillColor(sf::Color(255, 255, 255));
+        skillsHeader.setPosition(contentX, leftY);
+        ctx.window->draw(skillsHeader);
+        leftY += 34.f;
+
+        const std::string availablePointsLine = "Available Points: " + std::to_string(player.getSkillPoints());
+        sf::Text availablePoints(availablePointsLine, ctx.uiFont, 18);
+        availablePoints.setFillColor(sf::Color(255, 220, 120));
+        availablePoints.setPosition(contentX, leftY);
+        ctx.window->draw(availablePoints);
+        leftY += 28.f;
+
+        const std::string allocationLines[] = {
+            "1 - Attack (+1)",
+            "2 - Defense (+1)",
+            "3 - Endurance (+1, +3 HP)",
+        };
+
+        for (const std::string& line : allocationLines) {
+            sf::Text allocationLine(line, ctx.uiFont, 16);
+            allocationLine.setFillColor(sf::Color(210, 210, 210));
+            allocationLine.setPosition(contentX, leftY);
+            ctx.window->draw(allocationLine);
+            leftY += 24.f;
         }
 
         float rightX = contentX + (contentWidth * 0.52f);
