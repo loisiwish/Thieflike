@@ -39,6 +39,15 @@ class Item {
             Ranged
         };
 
+        enum class Rarity {
+            Common,
+            Uncommon,
+            Rare,
+            Epic,
+            Legendary,
+            Mythic
+        };
+
         Item()
             : category(Category::None),
               handling(WeaponHandling::None),
@@ -47,15 +56,17 @@ class Item {
               defenseBonus(0),
               rangeBonus(0),
               healthBonus(0),
-              moveSpeedBonus(0) {}
+              moveSpeedBonus(0),
+              rarity(Rarity::Common) {}
 
         static Item createHeadpiece(const std::string& name,
                                     int attack = 0,
                                     int defense = 0,
                                     int range = 0,
                                     int health = 0,
-                                    int moveSpeed = 0) {
-            return createArmor(Category::Headpiece, name, attack, defense, range, health, moveSpeed);
+                                    int moveSpeed = 0,
+                                    Rarity rarity = Rarity::Common) {
+            return createArmor(Category::Headpiece, name, attack, defense, range, health, moveSpeed, rarity);
         }
 
         static Item createChestArmor(const std::string& name,
@@ -63,8 +74,9 @@ class Item {
                                      int defense = 0,
                                      int range = 0,
                                      int health = 0,
-                                     int moveSpeed = 0) {
-            return createArmor(Category::ChestArmor, name, attack, defense, range, health, moveSpeed);
+                                     int moveSpeed = 0,
+                                     Rarity rarity = Rarity::Common) {
+            return createArmor(Category::ChestArmor, name, attack, defense, range, health, moveSpeed, rarity);
         }
 
         static Item createGauntlets(const std::string& name,
@@ -72,8 +84,9 @@ class Item {
                                     int defense = 0,
                                     int range = 0,
                                     int health = 0,
-                                    int moveSpeed = 0) {
-            return createArmor(Category::Gauntlets, name, attack, defense, range, health, moveSpeed);
+                                    int moveSpeed = 0,
+                                    Rarity rarity = Rarity::Common) {
+            return createArmor(Category::Gauntlets, name, attack, defense, range, health, moveSpeed, rarity);
         }
 
         static Item createLegsArmor(const std::string& name,
@@ -81,8 +94,9 @@ class Item {
                                     int defense = 0,
                                     int range = 0,
                                     int health = 0,
-                                    int moveSpeed = 0) {
-            return createArmor(Category::LegsArmor, name, attack, defense, range, health, moveSpeed);
+                                    int moveSpeed = 0,
+                                    Rarity rarity = Rarity::Common) {
+            return createArmor(Category::LegsArmor, name, attack, defense, range, health, moveSpeed, rarity);
         }
 
         static Item createBoots(const std::string& name,
@@ -90,8 +104,9 @@ class Item {
                                 int defense = 0,
                                 int range = 0,
                                 int health = 0,
-                                int moveSpeed = 0) {
-            return createArmor(Category::Boots, name, attack, defense, range, health, moveSpeed);
+                                int moveSpeed = 0,
+                                Rarity rarity = Rarity::Common) {
+            return createArmor(Category::Boots, name, attack, defense, range, health, moveSpeed, rarity);
         }
 
         static Item createJewelry(const std::string& name,
@@ -99,7 +114,8 @@ class Item {
                                   int defense = 0,
                                   int range = 0,
                                   int health = 0,
-                                  int moveSpeed = 0) {
+                                  int moveSpeed = 0,
+                                  Rarity rarity = Rarity::Common) {
             Item item;
             item.name = name;
             item.category = Category::Jewelry;
@@ -108,13 +124,15 @@ class Item {
             item.rangeBonus = range;
             item.healthBonus = health;
             item.moveSpeedBonus = moveSpeed;
+            item.rarity = rarity;
             return item;
         }
 
         static Item createWeapon(const std::string& name,
                                  WeaponHandling handling,
                                  WeaponRange weaponRange,
-                                 int attack,
+                                 Rarity rarity = Rarity::Common,
+                                 int attack = 0,
                                  int defense = 0,
                                  int range = 0,
                                  int health = 0,
@@ -129,6 +147,7 @@ class Item {
             item.rangeBonus = range;
             item.healthBonus = health;
             item.moveSpeedBonus = moveSpeed;
+            item.rarity = rarity;
             return item;
         }
 
@@ -142,6 +161,7 @@ class Item {
         int getRangeBonus() const { return rangeBonus; }
         int getHealthBonus() const { return healthBonus; }
         int getMoveSpeedBonus() const { return moveSpeedBonus; }
+        Rarity getRarity() const { return rarity; }
 
         bool isTwoHandedWeapon() const {
             return category == Category::Weapon && handling == WeaponHandling::TwoHanded;
@@ -179,7 +199,8 @@ class Item {
                                 int defense,
                                 int range,
                                 int health,
-                                int moveSpeed) {
+                                int moveSpeed,
+                                Rarity rarity) {
             Item item;
             item.name = name;
             item.category = category;
@@ -188,6 +209,7 @@ class Item {
             item.rangeBonus = range;
             item.healthBonus = health;
             item.moveSpeedBonus = moveSpeed;
+            item.rarity = rarity;
             return item;
         }
 
@@ -200,4 +222,5 @@ class Item {
         int rangeBonus;
         int healthBonus;
         int moveSpeedBonus;
+        Rarity rarity;
 };
