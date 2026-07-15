@@ -43,7 +43,8 @@ class AEnemy : public IEnemy {
               base_defense(1),
               base_range(1),
               experienceMultiplier(1.0f),
-              itemDropRate(0.0f) {}
+              itemDropRate(0.0f),
+              carriesStairKey(false) {}
         ~AEnemy() {}
 
         void takeDamage(int damage) override { health -= damage; }
@@ -161,6 +162,8 @@ class AEnemy : public IEnemy {
         void setItemDropRate(float rate) { itemDropRate = rate; }
         float getItemDropRate() const { return itemDropRate; }
         float getExperienceMultiplier() const { return experienceMultiplier; }
+        void setCarriesStairKey(bool value) { carriesStairKey = value; }
+        bool getCarriesStairKey() const { return carriesStairKey; }
 
     private:
         int health;
@@ -174,4 +177,5 @@ class AEnemy : public IEnemy {
         std::string description;
         float experienceMultiplier; // Multiplier for experience dropped, can be adjusted based on enemy type
         float itemDropRate;
+        bool carriesStairKey;
 };

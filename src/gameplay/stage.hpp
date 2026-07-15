@@ -38,10 +38,12 @@ class Stage {
         bool hasLineOfSight(int fromX, int fromY, int toX, int toY) const;
         bool canRangedAttack(int fromX, int fromY, int toX, int toY, Player &player) const;
         bool movePlayerBy(int deltaX, int deltaY);
+        bool isStaircaseUnlocked() const { return staircaseUnlocked; }
 
     private:
         Player player;
         std::vector<AEnemy> enemies;
+        bool staircaseUnlocked;
         int stageDepth; // Represents the current depth of the stage, can be used for difficulty scaling
         int stageWidth; // Width of the stage
         int stageHeight; // Height of the stage

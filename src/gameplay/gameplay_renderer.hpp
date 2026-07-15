@@ -45,6 +45,10 @@ namespace gameplay_renderer {
         float stageDepthTextElapsed;
         float stageDepthTextDuration;
         std::string stageDepthText;
+        sf::Texture staircaseLockedTexture;
+        sf::Texture staircaseUnlockedTexture;
+        bool staircaseLockedTextureLoaded;
+        bool staircaseUnlockedTextureLoaded;
         bool uiFontLoaded;
 
         GameLoopContext();

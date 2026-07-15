@@ -30,6 +30,33 @@ namespace gameplay_renderer {
                 ctx.tile.setPosition(ctx.grid.offsetX + (x * ctx.grid.cellSize),
                                      ctx.grid.offsetY + (y * ctx.grid.cellSize));
                 ctx.window->draw(ctx.tile);
+
+                if (inVision && tileType == Stage::Staircase) {
+                    const bool unlocked = ctx.stage->isStaircaseUnlocked();
+                    const sf::Texture* iconTexture = nullptr;
+                    if (unlocked && ctx.staircaseUnlockedTextureLoaded) {
+                        iconTexture = &ctx.staircaseUnlockedTexture;
+                    } else if (!unlocked && ctx.staircaseLockedTextureLoaded) {
+                        iconTexture = &ctx.staircaseLockedTexture;
+                    }
+
+                    if (iconTexture != nullptr) {
+                        sf::Sprite icon(*iconTexture);
+                        const sf::Vector2u iconSize = iconTexture->getSize();
+                        if (iconSize.x > 0 && iconSize.y > 0) {
+                            const float targetSize = std::max(8.f, ctx.grid.cellSize * 0.8f);
+                            const float scaleX = targetSize / static_cast<float>(iconSize.x);
+                            const float scaleY = targetSize / static_cast<float>(iconSize.y);
+                            icon.setScale(scaleX, scaleY);
+
+                            const float iconWidth = static_cast<float>(iconSize.x) * scaleX;
+                            const float iconHeight = static_cast<float>(iconSize.y) * scaleY;
+                            icon.setPosition(ctx.grid.offsetX + (x * ctx.grid.cellSize) + ((ctx.grid.cellSize - iconWidth) * 0.5f),
+                                             ctx.grid.offsetY + (y * ctx.grid.cellSize) + ((ctx.grid.cellSize - iconHeight) * 0.5f));
+                            ctx.window->draw(icon);
+                        }
+                    }
+                }
             }
         }
 

@@ -7,7 +7,7 @@
 #include "../units/rat.hpp"
 #include "../units/goblin.hpp"
 
-Stage::Stage() : stageDepth(1), stageWidth(10), stageHeight(10) {
+Stage::Stage() : staircaseUnlocked(false), stageDepth(1), stageWidth(10), stageHeight(10) {
     regenerateForDepth();
 }
 
@@ -28,6 +28,7 @@ void Stage::regenerateForDepth() {
     }
 
     enemies.clear();
+    staircaseUnlocked = false;
 
     const sf::Vector2i playerSpawn(1, stageHeight / 2);
 
@@ -156,6 +157,13 @@ void Stage::regenerateForDepth() {
                 ++spawned;
             }
         }
+    }
+
+    if (enemies.empty()) {
+        staircaseUnlocked = true;
+    } else {
+        std::uniform_int_distribution<std::size_t> randomEnemyIndex(0, enemies.size() - 1);
+        enemies[randomEnemyIndex(randomEngine)].setCarriesStairKey(true);
     }
 
     // Place one staircase on a random reachable grass tile (not on the player spawn).
@@ -295,6 +303,10 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
         targetEnemy.takeDamage(damage);
 
         if (targetEnemy.getHealth() <= 0) {
+            if (targetEnemy.getCarriesStairKey()) {
+                staircaseUnlocked = true;
+                player.getInventory().addItem("Stair Key");
+            }
             targetEnemy.dropExperience(player);
             targetEnemy.tryDropItem(player);
             while (player.checkLevelUp()) {}
@@ -312,7 +324,7 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
 
     player.setPosition(targetX, targetY);
 
-    if (getTileAt(targetX, targetY) == Staircase) {
+    if (getTileAt(targetX, targetY) == Staircase && staircaseUnlocked) {
         advanceDepth();
     }
 
