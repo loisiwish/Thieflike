@@ -15,6 +15,7 @@ class Game {
         Gameplay &getGameplay() { return gameplay; }
         int getState() const { return state; }
         void changeState(int newState) { state = newState; }
+        void resetGameplay() { gameplay = Gameplay(); }
 
     private:
         Window window;

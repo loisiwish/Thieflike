@@ -330,3 +330,83 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
     return true;
 }
 
+void Stage::performEnemiesTurn() {
+    const auto isCellOccupiedByOtherEnemy = [&](int x, int y, std::size_t selfIndex) {
+        for (std::size_t index = 0; index < enemies.size(); ++index) {
+            if (index == selfIndex) {
+                continue;
+            }
+            if (enemies[index].getPosition() == sf::Vector2i(x, y)) {
+                return true;
+            }
+        }
+        return false;
+    };
+
+    for (std::size_t index = 0; index < enemies.size(); ++index) {
+        AEnemy& enemy = enemies[index];
+
+        for (int step = 0; step < enemy.getMoveSpeed(); ++step) {
+            const sf::Vector2i playerPos = player.getPosition();
+            const sf::Vector2i enemyPos = enemy.getPosition();
+
+            if (!hasLineOfSight(enemyPos.x, enemyPos.y, playerPos.x, playerPos.y)) {
+                break;
+            }
+
+            const int distance = std::max(std::abs(playerPos.x - enemyPos.x), std::abs(playerPos.y - enemyPos.y));
+            if (distance <= enemy.getRange()) {
+                enemy.dealDamage(player);
+                break;
+            }
+
+            const int directions[4][2] = {
+                {1, 0},
+                {-1, 0},
+                {0, 1},
+                {0, -1},
+            };
+
+            int bestDeltaX = 0;
+            int bestDeltaY = 0;
+            int bestDistance = distance;
+
+            for (const auto& direction : directions) {
+                const int nextX = enemyPos.x + direction[0];
+                const int nextY = enemyPos.y + direction[1];
+
+                if (sf::Vector2i(nextX, nextY) == playerPos) {
+                    continue;
+                }
+                if (!isWalkableTile(nextX, nextY)) {
+                    continue;
+                }
+                if (isCellOccupiedByOtherEnemy(nextX, nextY, index)) {
+                    continue;
+                }
+
+                const int nextDistance = std::max(std::abs(playerPos.x - nextX), std::abs(playerPos.y - nextY));
+                if (nextDistance < bestDistance) {
+                    bestDistance = nextDistance;
+                    bestDeltaX = direction[0];
+                    bestDeltaY = direction[1];
+                }
+            }
+
+            if (bestDeltaX == 0 && bestDeltaY == 0) {
+                break;
+            }
+
+            enemy.move(bestDeltaX, bestDeltaY);
+
+            const sf::Vector2i updatedEnemyPos = enemy.getPosition();
+            const int updatedDistance = std::max(std::abs(playerPos.x - updatedEnemyPos.x), std::abs(playerPos.y - updatedEnemyPos.y));
+            if (updatedDistance <= enemy.getRange() &&
+                hasLineOfSight(updatedEnemyPos.x, updatedEnemyPos.y, playerPos.x, playerPos.y)) {
+                enemy.dealDamage(player);
+                break;
+            }
+        }
+    }
+}
+

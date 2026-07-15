@@ -10,6 +10,13 @@
 
 namespace gameplay_renderer {
     namespace {
+        void pushPopupNotification(GameLoopContext& ctx, const std::string& text, const sf::Color& color) {
+            ctx.popupNotifications.emplace_back(text, color, 2.8f);
+            if (ctx.popupNotifications.size() > 4) {
+                ctx.popupNotifications.erase(ctx.popupNotifications.begin());
+            }
+        }
+
         float lerpFloat(float start, float end, float t) {
             return start + ((end - start) * t);
         }
@@ -162,6 +169,25 @@ namespace gameplay_renderer {
         return wrapTextToWidthInternal(text, font, characterSize, maxWidth);
     }
 
+    sf::Color getItemRarityColor(Item::Rarity rarity) {
+        switch (rarity) {
+            case Item::Rarity::Common:
+                return sf::Color(160, 160, 160);
+            case Item::Rarity::Uncommon:
+                return sf::Color(80, 200, 120);
+            case Item::Rarity::Rare:
+                return sf::Color(80, 140, 255);
+            case Item::Rarity::Epic:
+                return sf::Color(170, 90, 230);
+            case Item::Rarity::Legendary:
+                return sf::Color(255, 155, 60);
+            case Item::Rarity::Mythic:
+                return sf::Color(220, 60, 60);
+            default:
+                return sf::Color::White;
+        }
+    }
+
     GridLayout::GridLayout()
         : stageWidth(0), stageHeight(0), cellSize(0.f), offsetX(0.f), offsetY(0.f), valid(false) {}
 
@@ -170,7 +196,7 @@ namespace gameplay_renderer {
           hoveredEnemyIndex(std::numeric_limits<std::size_t>::max()),
           selectedEnemyIndex(std::numeric_limits<std::size_t>::max()),
                   selectedGridX(-1), selectedGridY(-1), hasSelectedGrid(false), inventoryScreenOpen(false),
-            inventorySelectingBackpack(false), inventorySelectedBackpackIndex(-1), inventorySelectedEquippedIndex(0),
+            inventorySelectingBackpack(false), inventorySelectedBackpackIndex(-1), inventorySelectedEquippedIndex(0), playerMovesRemaining(0),
             stageDepthTextActive(false), stageDepthTextElapsed(0.f), stageDepthTextDuration(1.8f),
             stageDepthText(""),
             staircaseLockedTextureLoaded(false), staircaseUnlockedTextureLoaded(false),
@@ -240,6 +266,10 @@ namespace gameplay_renderer {
         }
         if (ctx.staircaseUnlockedTexture.loadFromFile("assets/unlock.png")) {
             ctx.staircaseUnlockedTextureLoaded = true;
+        }
+
+        if (ctx.stage != nullptr) {
+            ctx.playerMovesRemaining = std::max(1, ctx.stage->getPlayer().getMoveSpeed());
         }
 
         updateGridLayout(ctx);
@@ -313,6 +343,76 @@ namespace gameplay_renderer {
         ctx.window->draw(bannerText);
     }
 
+    void updatePopupNotifications(GameLoopContext& ctx, float deltaSeconds) {
+        if (deltaSeconds < 0.f) {
+            deltaSeconds = 0.f;
+        }
+
+        for (PopupNotification& notification : ctx.popupNotifications) {
+            notification.elapsed += deltaSeconds;
+        }
+
+        ctx.popupNotifications.erase(
+            std::remove_if(
+                ctx.popupNotifications.begin(),
+                ctx.popupNotifications.end(),
+                [](const PopupNotification& notification) {
+                    return notification.elapsed >= notification.duration;
+                }),
+            ctx.popupNotifications.end());
+    }
+
+    void drawPopupNotifications(GameLoopContext& ctx) {
+        if (ctx.window == nullptr || !ctx.uiFontLoaded || ctx.popupNotifications.empty()) {
+            return;
+        }
+
+        const sf::Vector2u windowSize = ctx.window->getSize();
+        float bottomY = static_cast<float>(windowSize.y) - 24.f;
+
+        for (std::size_t index = 0; index < ctx.popupNotifications.size(); ++index) {
+            const PopupNotification& notification = ctx.popupNotifications[ctx.popupNotifications.size() - 1 - index];
+            float alphaFactor = 1.f;
+            if (notification.elapsed < 0.25f) {
+                alphaFactor = notification.elapsed / 0.25f;
+            } else if (notification.elapsed > notification.duration - 0.35f) {
+                alphaFactor = (notification.duration - notification.elapsed) / 0.35f;
+            }
+            if (alphaFactor < 0.f) {
+                alphaFactor = 0.f;
+            }
+            if (alphaFactor > 1.f) {
+                alphaFactor = 1.f;
+            }
+
+            sf::Text text(notification.text, ctx.uiFont, 18);
+            text.setFillColor(sf::Color(notification.color.r,
+                                         notification.color.g,
+                                         notification.color.b,
+                                         static_cast<sf::Uint8>(255.f * alphaFactor)));
+            const sf::FloatRect textBounds = text.getLocalBounds();
+            const float boxWidth = textBounds.width + 28.f;
+            const float boxHeight = 34.f;
+            const float boxX = static_cast<float>(windowSize.x) - boxWidth - 20.f;
+            const float boxY = bottomY - boxHeight;
+
+            sf::RectangleShape box(sf::Vector2f(boxWidth, boxHeight));
+            box.setPosition(boxX, boxY);
+            box.setFillColor(sf::Color(20, 20, 20, static_cast<sf::Uint8>(210.f * alphaFactor)));
+            box.setOutlineThickness(1.f);
+            box.setOutlineColor(sf::Color(notification.color.r,
+                                          notification.color.g,
+                                          notification.color.b,
+                                          static_cast<sf::Uint8>(180.f * alphaFactor)));
+
+            text.setPosition(boxX + 14.f, boxY + 7.f);
+
+            ctx.window->draw(box);
+            ctx.window->draw(text);
+            bottomY = boxY - 10.f;
+        }
+    }
+
     bool listenGameEvents(Game& game, GameLoopContext& ctx) {
         sf::Event event;
         while (ctx.window->pollEvent(event)) {
@@ -358,21 +458,19 @@ namespace gameplay_renderer {
                     continue;
                 }
                 const int depthBeforeAction = ctx.stage->getDepth();
-                if (event.key.code == sf::Keyboard::Q) {
-                    ctx.stage->movePlayerBy(-1, 0);
-                    playerAction = true;
+                const int levelBeforeAction = ctx.stage->getPlayer().getLevel();
+                const std::vector<Item> backpackBeforeAction = ctx.stage->getPlayer().getInventory().getBackpackItems();
+                if (event.key.code == sf::Keyboard::Q && ctx.playerMovesRemaining > 0) {
+                    playerAction = ctx.stage->movePlayerBy(-1, 0);
                 }
-                if (event.key.code == sf::Keyboard::D) {
-                    ctx.stage->movePlayerBy(1, 0);
-                    playerAction = true;
+                if (event.key.code == sf::Keyboard::D && ctx.playerMovesRemaining > 0) {
+                    playerAction = ctx.stage->movePlayerBy(1, 0);
                 }
-                if (event.key.code == sf::Keyboard::Z) {
-                    ctx.stage->movePlayerBy(0, -1);
-                    playerAction = true;
+                if (event.key.code == sf::Keyboard::Z && ctx.playerMovesRemaining > 0) {
+                    playerAction = ctx.stage->movePlayerBy(0, -1);
                 }
-                if (event.key.code == sf::Keyboard::S) {
-                    ctx.stage->movePlayerBy(0, 1);
-                    playerAction = true;
+                if (event.key.code == sf::Keyboard::S && ctx.playerMovesRemaining > 0) {
+                    playerAction = ctx.stage->movePlayerBy(0, 1);
                 }
                 if (event.key.code == sf::Keyboard::Left) {
                     moveSelectedGridCell(ctx, -1, 0);
@@ -392,10 +490,35 @@ namespace gameplay_renderer {
                     updateGridLayout(ctx);
                 }
 
+                if (playerAction) {
+                    --ctx.playerMovesRemaining;
+                    const Player& player = ctx.stage->getPlayer();
+                    if (player.getLevel() > levelBeforeAction) {
+                        for (int level = levelBeforeAction + 1; level <= player.getLevel(); ++level) {
+                            pushPopupNotification(ctx, "Level Up: " + std::to_string(level), sf::Color(255, 215, 120));
+                        }
+                    }
+
+                    const std::vector<Item>& backpackAfterAction = player.getInventory().getBackpackItems();
+                    if (backpackAfterAction.size() > backpackBeforeAction.size()) {
+                        for (std::size_t i = backpackBeforeAction.size(); i < backpackAfterAction.size(); ++i) {
+                            pushPopupNotification(ctx,
+                                                  "New Item: " + backpackAfterAction[i].getName(),
+                                                  getItemRarityColor(backpackAfterAction[i].getRarity()));
+                        }
+                    }
+
+                    if (ctx.stage->getDepth() == depthBeforeAction && ctx.playerMovesRemaining <= 0) {
+                        ctx.stage->performEnemiesTurn();
+                        ctx.playerMovesRemaining = std::max(1, ctx.stage->getPlayer().getMoveSpeed());
+                    }
+                }
+
                 if (playerAction && ctx.stage->getDepth() != depthBeforeAction) {
                     ctx.selectedEnemyIndex = std::numeric_limits<std::size_t>::max();
                     ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
                     ctx.hasSelectedGrid = false;
+                    ctx.playerMovesRemaining = std::max(1, ctx.stage->getPlayer().getMoveSpeed());
                     updateGridLayout(ctx);
                     triggerStageDepthText(ctx);
                 }
@@ -415,9 +538,9 @@ namespace gameplay_renderer {
         const float contentX = panelX + 8.f;
         const float contentWidth = ctx.panelWidth - 16.f;
         const float maxY = static_cast<float>(windowSize.y) - 20.f;
-        const float gridDetailsTop = 185.f;
+        const float gridDetailsTop = 215.f;
         const std::size_t rowsPerColumn = 4;
-        const float firstItemY = 70.f;
+        const float firstItemY = 100.f;
         const float itemHeight = 30.f;
         const float columnGap = 10.f;
         ctx.panelBackground.setPosition(panelX, 0.f);
@@ -428,6 +551,24 @@ namespace gameplay_renderer {
         header.setFillColor(sf::Color::White);
         header.setPosition(contentX, 20.f);
         ctx.window->draw(header);
+
+        const Player& player = ctx.stage->getPlayer();
+        const int playerHealth = player.getHealth();
+        const int playerMaxHealth = player.getMaxHealth();
+        const float healthRatio = (playerMaxHealth > 0)
+                                      ? (static_cast<float>(playerHealth) / static_cast<float>(playerMaxHealth))
+                                      : 0.f;
+
+        sf::Text playerHealthText("HP: " + std::to_string(playerHealth) + " / " + std::to_string(playerMaxHealth),
+                                  ctx.uiFont,
+                                  20);
+        if (healthRatio <= 0.3f) {
+            playerHealthText.setFillColor(sf::Color(255, 120, 120));
+        } else {
+            playerHealthText.setFillColor(sf::Color(185, 230, 185));
+        }
+        playerHealthText.setPosition(contentX, 60.f);
+        ctx.window->draw(playerHealthText);
 
         const std::vector<AEnemy>& enemies = ctx.stage->getEnemies();
         const std::vector<std::size_t> visibleEnemyIndices = getVisibleEnemyIndices(*ctx.stage);

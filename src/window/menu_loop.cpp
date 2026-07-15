@@ -18,7 +18,7 @@ int menu_loop(Game& game) {
             case 1: // Playing state
                 // Update and render game
                 game_loop(game);
-                return 0;
+                break;
             case 2: // Paused state
                 // Render paused screen
                 break;

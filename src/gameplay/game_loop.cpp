@@ -14,7 +14,14 @@ void game_loop(Game& game) {
             return;
         }
 
+        if (game.getGameplay().getStage().getPlayer().getHealth() <= 0) {
+            game.resetGameplay();
+            game.changeState(0);
+            return;
+        }
+
         gameplay_renderer::updateStageDepthText(ctx, deltaSeconds);
+        gameplay_renderer::updatePopupNotifications(ctx, deltaSeconds);
 
         ctx.window->clear(sf::Color(20, 20, 20));
         if (ctx.inventoryScreenOpen) {
@@ -24,6 +31,7 @@ void game_loop(Game& game) {
             gameplay_renderer::drawEnemyList(ctx);
         }
         gameplay_renderer::drawStageDepthText(ctx);
+        gameplay_renderer::drawPopupNotifications(ctx);
         ctx.window->display();
     }
 }

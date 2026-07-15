@@ -146,11 +146,11 @@ class AEnemy : public IEnemy {
             } else if (category == 2) {
                 droppedItem = Item::createChestArmor("Chestpiece", 0, defenseBonus + 1, 0, healthBonus, 0, rarity);
             } else if (category == 3) {
-                droppedItem = Item::createGauntlets("Gauntlets", attackBonus / 2, defenseBonus / 2, 0, 0, 0, rarity);
+                droppedItem = Item::createGauntlets("Gauntlets", attackBonus, defenseBonus / 2, 0, 0, 0, rarity);
             } else if (category == 4) {
                 droppedItem = Item::createLegsArmor("Leggings", 0, defenseBonus, 0, healthBonus / 2, 0, rarity);
             } else if (category == 5) {
-                droppedItem = Item::createBoots("Boots", 0, defenseBonus / 2, 0, 0, std::max(1, moveSpeedBonus), rarity);
+                droppedItem = Item::createBoots("Boots", 0, defenseBonus, 0, 0, std::max(1, moveSpeedBonus / 2), rarity);
             } else {
                 droppedItem = Item::createJewelry("Amulet", attackBonus / 2, defenseBonus / 2, rangeBonus / 2, healthBonus / 2, moveSpeedBonus / 2, rarity);
             }

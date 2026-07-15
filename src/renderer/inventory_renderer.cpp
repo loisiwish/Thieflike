@@ -44,6 +44,25 @@ namespace gameplay_renderer {
             return handling + " " + range;
         }
 
+        std::string rarityLabel(Item::Rarity rarity) {
+            switch (rarity) {
+                case Item::Rarity::Common:
+                    return "Common";
+                case Item::Rarity::Uncommon:
+                    return "Uncommon";
+                case Item::Rarity::Rare:
+                    return "Rare";
+                case Item::Rarity::Epic:
+                    return "Epic";
+                case Item::Rarity::Legendary:
+                    return "Legendary";
+                case Item::Rarity::Mythic:
+                    return "Mythic";
+                default:
+                    return "Unknown";
+            }
+        }
+
         std::string slotLabel(Item::Slot slot) {
             switch (slot) {
                 case Item::Slot::Headpiece:
@@ -187,16 +206,28 @@ namespace gameplay_renderer {
         }
 
         std::string itemSummary(const Item& item) {
-            std::string summary = item.getName() + " [" + itemCategoryLabel(item.getCategory()) + "]";
+            std::string summary = item.getName() + " [" + rarityLabel(item.getRarity()) + "]";
+            summary += " [" + itemCategoryLabel(item.getCategory()) + "]";
             const std::string weaponInfo = weaponDetails(item);
             if (!weaponInfo.empty()) {
                 summary += " " + weaponInfo;
             }
 
-            summary += "  ATK+" + std::to_string(item.getAttackBonus());
-            summary += " DEF+" + std::to_string(item.getDefenseBonus());
-            summary += " RNG+" + std::to_string(item.getRangeBonus());
-            summary += " SPD+" + std::to_string(item.getMoveSpeedBonus());
+            if (item.getAttackBonus() != 0) {
+                summary += "  ATK+" + std::to_string(item.getAttackBonus());
+            }
+            if (item.getDefenseBonus() != 0) {
+                summary += " DEF+" + std::to_string(item.getDefenseBonus());
+            }
+            if (item.getRangeBonus() != 0) {
+                summary += " RNG+" + std::to_string(item.getRangeBonus());
+            }
+            if (item.getMoveSpeedBonus() != 0) {
+                summary += " SPD+" + std::to_string(item.getMoveSpeedBonus());
+            }
+            if (item.getHealthBonus() != 0) {
+                summary += " HP+" + std::to_string(item.getHealthBonus());
+            }
 
             return summary;
         }
@@ -232,6 +263,7 @@ namespace gameplay_renderer {
 
         const std::string statsLine =
             "HP " + std::to_string(player.getHealth()) +
+            "/" + std::to_string(player.getMaxHealth()) +
             " | ATK " + std::to_string(player.getAttack()) +
             " | DEF " + std::to_string(player.getDefense()) +
             " | RNG " + std::to_string(player.getRange()) +
@@ -266,7 +298,13 @@ namespace gameplay_renderer {
 
             sf::Text entry(wrapTextToWidth(line, ctx.uiFont, 16, contentWidth * 0.48f), ctx.uiFont, 16);
             const bool isSelected = !ctx.inventorySelectingBackpack && ctx.inventorySelectedEquippedIndex == i;
-            entry.setFillColor(isSelected ? sf::Color(255, 220, 120) : sf::Color(210, 210, 210));
+            if (isSelected) {
+                sf::RectangleShape highlight(sf::Vector2f((contentWidth * 0.48f) + 8.f, 24.f));
+                highlight.setPosition(contentX - 4.f, leftY - 1.f);
+                highlight.setFillColor(sf::Color(255, 220, 120, 45));
+                ctx.window->draw(highlight);
+            }
+            entry.setFillColor(equippedItem != nullptr ? getItemRarityColor(equippedItem->getRarity()) : sf::Color(210, 210, 210));
             entry.setPosition(contentX, leftY);
             ctx.window->draw(entry);
             leftY += 28.f;
@@ -321,7 +359,13 @@ namespace gameplay_renderer {
                 sf::Text entry(wrapTextToWidth(line, ctx.uiFont, 16, contentWidth * 0.48f), ctx.uiFont, 16);
                 const bool isSelected = ctx.inventorySelectingBackpack &&
                                         ctx.inventorySelectedBackpackIndex == static_cast<int>(i);
-                entry.setFillColor(isSelected ? sf::Color(255, 220, 120) : sf::Color(210, 210, 210));
+                if (isSelected) {
+                    sf::RectangleShape highlight(sf::Vector2f((contentWidth * 0.48f) + 8.f, 24.f));
+                    highlight.setPosition(rightX - 4.f, rightY - 1.f);
+                    highlight.setFillColor(sf::Color(255, 220, 120, 45));
+                    ctx.window->draw(highlight);
+                }
+                entry.setFillColor(getItemRarityColor(backpack[i].getRarity()));
                 entry.setPosition(rightX, rightY);
                 ctx.window->draw(entry);
                 rightY += 24.f;

@@ -18,8 +18,11 @@ class Player {
             }
             health = h;
         }
-        int getHealth() const { return health; }
-        int getMaxHealth() const { return 7 + (endurance * 3); }
+        int getHealth() const {
+            const int totalHealth = health + inventory.getTotalHealthBonus();
+            return totalHealth < 0 ? 0 : totalHealth;
+        }
+        int getMaxHealth() const { return 7 + (endurance * 3) + inventory.getTotalHealthBonus(); }
 
         void setPosition(int x, int y) { position = sf::Vector2i(x, y); }
         sf::Vector2i getPosition() const { return position; }
@@ -29,6 +32,10 @@ class Player {
             int effective_damage = damage - getDefense();
             if (effective_damage < 0) effective_damage = 0;
             health -= effective_damage;
+            if (health < 0) {
+                health = 0;
+                // TODO : kill player, back to menus
+            }
             return effective_damage;
         }
         int getAttack() const { return base_attack + inventory.getTotalAttackBonus(); }
