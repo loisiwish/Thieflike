@@ -305,7 +305,6 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
         if (targetEnemy.getHealth() <= 0) {
             if (targetEnemy.getCarriesStairKey()) {
                 staircaseUnlocked = true;
-                player.getInventory().addItem("Stair Key");
             }
             targetEnemy.dropExperience(player);
             targetEnemy.tryDropItem(player);
