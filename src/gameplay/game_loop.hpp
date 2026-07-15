@@ -17,5 +17,5 @@ class Gameplay {
     private:
         Stage stage;
         int StageDepth;
-        int currentTurn; //0 for player, 1 for ennemies
+        int currentTurn; //0 for player, 1 for enemies
 };

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../units/player.hpp"
-#include "../units/ennemy.hpp"
+#include "../units/enemy.hpp"
 
 #include <cstddef>
 #include <vector>
@@ -27,11 +27,11 @@ class Stage {
         const std::vector<std::vector<TileType>>& getMap() const { return map; }
         Player& getPlayer() { return player; }
         const Player& getPlayer() const { return player; }
-        const std::vector<AEnnemy>& getEnnemies() const { return ennemies; }
+        const std::vector<AEnemy>& getEnemies() const { return enemies; }
 
-        bool addEnemy(const AEnnemy& enemy);
+        bool addEnemy(const AEnemy& enemy);
         std::size_t getEnemyIndexAt(int x, int y) const;
-        const AEnnemy* getEnemyAt(int x, int y) const;
+        const AEnemy* getEnemyAt(int x, int y) const;
         TileType getTileAt(int x, int y) const;
         bool isWalkableTile(int x, int y) const;
         bool blocksVision(int x, int y) const;
@@ -41,7 +41,7 @@ class Stage {
 
     private:
         Player player;
-        std::vector<AEnnemy> ennemies;
+        std::vector<AEnemy> enemies;
         int stageDepth; // Represents the current depth of the stage, can be used for difficulty scaling
         int stageWidth; // Width of the stage
         int stageHeight; // Height of the stage

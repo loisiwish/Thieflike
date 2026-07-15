@@ -10,6 +10,7 @@ SRC = src/main.cpp	\
 	src/gameplay/gameplay_renderer.cpp	\
 	src/gameplay/tile_renderer.cpp	\
 	src/gameplay/game_loop.cpp	\
+	src/gameplay/rewards.cpp	\
 
 OBJ = $(SRC:.cpp=.o)
 

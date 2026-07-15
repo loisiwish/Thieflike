@@ -37,9 +37,9 @@ namespace gameplay_renderer {
                                    ctx.grid.offsetY + (static_cast<float>(playerPos.y) * ctx.grid.cellSize) + 1.f);
         ctx.window->draw(ctx.playerCell);
 
-        const std::vector<AEnnemy>& ennemies = ctx.stage->getEnnemies();
-        for (std::size_t i = 0; i < ennemies.size(); ++i) {
-            const sf::Vector2i enemyPos = ennemies[i].getPosition();
+        const std::vector<AEnemy>& enemies = ctx.stage->getEnemies();
+        for (std::size_t i = 0; i < enemies.size(); ++i) {
+            const sf::Vector2i enemyPos = enemies[i].getPosition();
             if (!ctx.stage->hasLineOfSight(playerPos.x, playerPos.y, enemyPos.x, enemyPos.y)) {
                 continue;
             }
@@ -48,7 +48,7 @@ namespace gameplay_renderer {
             ctx.window->draw(ctx.enemyCell);
 
             if (ctx.uiFontLoaded) {
-                const std::string enemyName = ennemies[i].getName();
+                const std::string enemyName = enemies[i].getName();
                 const char letter = enemyName.empty()
                                         ? '?'
                                         : static_cast<char>(std::toupper(static_cast<unsigned char>(enemyName[0])));

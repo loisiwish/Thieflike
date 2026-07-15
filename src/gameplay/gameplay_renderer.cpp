@@ -223,9 +223,9 @@ namespace gameplay_renderer {
         std::vector<std::size_t> getVisibleEnemyIndices(const Stage& stage) {
             std::vector<std::size_t> visibleIndices;
             const sf::Vector2i playerPos = stage.getPlayer().getPosition();
-            const std::vector<AEnnemy>& ennemies = stage.getEnnemies();
-            for (std::size_t i = 0; i < ennemies.size(); ++i) {
-                const sf::Vector2i pos = ennemies[i].getPosition();
+            const std::vector<AEnemy>& enemies = stage.getEnemies();
+            for (std::size_t i = 0; i < enemies.size(); ++i) {
+                const sf::Vector2i pos = enemies[i].getPosition();
                 if (stage.hasLineOfSight(playerPos.x, playerPos.y, pos.x, pos.y)) {
                     visibleIndices.push_back(i);
                 }
@@ -611,10 +611,10 @@ namespace gameplay_renderer {
         header.setPosition(contentX, 20.f);
         ctx.window->draw(header);
 
-        const std::vector<AEnnemy>& ennemies = ctx.stage->getEnnemies();
+        const std::vector<AEnemy>& enemies = ctx.stage->getEnemies();
         const std::vector<std::size_t> visibleEnemyIndices = getVisibleEnemyIndices(*ctx.stage);
         const sf::Vector2i playerPos = ctx.stage->getPlayer().getPosition();
-        const AEnnemy* enemyOnSelectedCell = (ctx.hasSelectedGrid &&
+        const AEnemy* enemyOnSelectedCell = (ctx.hasSelectedGrid &&
                                               ctx.stage->hasLineOfSight(playerPos.x, playerPos.y, ctx.selectedGridX, ctx.selectedGridY))
                                                  ? ctx.stage->getEnemyAt(ctx.selectedGridX, ctx.selectedGridY)
                                                  : nullptr;
@@ -627,7 +627,7 @@ namespace gameplay_renderer {
 
         for (std::size_t row = 0; row < visibleEnemyIndices.size(); ++row) {
             const std::size_t i = visibleEnemyIndices[row];
-            const AEnnemy& enemy = ennemies[i];
+            const AEnemy& enemy = enemies[i];
             const sf::Vector2i position = enemy.getPosition();
             const std::size_t column = row / rowsPerColumn;
             const std::size_t rowInColumn = row % rowsPerColumn;
@@ -723,7 +723,7 @@ namespace gameplay_renderer {
 
         float enemyY = selectedEnemyTop + 40.f;
         if (enemyOnSelectedCell != nullptr) {
-            const AEnnemy& enemy = *enemyOnSelectedCell;
+            const AEnemy& enemy = *enemyOnSelectedCell;
             const sf::Vector2i position = enemy.getPosition();
 
             const std::string statsLine1 = "Name: " + enemy.getName();
@@ -999,7 +999,7 @@ namespace gameplay_renderer {
         }
 
         const std::size_t enemyIndex = ctx.stage->getEnemyIndexAt(cellX, cellY);
-        if (enemyIndex == ctx.stage->getEnnemies().size()) {
+        if (enemyIndex == ctx.stage->getEnemies().size()) {
             return;
         }
 
@@ -1018,12 +1018,12 @@ namespace gameplay_renderer {
             return;
         }
 
-        const std::vector<AEnnemy>& ennemies = ctx.stage->getEnnemies();
-        if (ctx.selectedEnemyIndex >= ennemies.size()) {
+        const std::vector<AEnemy>& enemies = ctx.stage->getEnemies();
+        if (ctx.selectedEnemyIndex >= enemies.size()) {
             return;
         }
 
-        const sf::Vector2i enemyPos = ennemies[ctx.selectedEnemyIndex].getPosition();
+        const sf::Vector2i enemyPos = enemies[ctx.selectedEnemyIndex].getPosition();
         ctx.selectedGridX = enemyPos.x;
         ctx.selectedGridY = enemyPos.y;
         ctx.hasSelectedGrid = true;
@@ -1056,7 +1056,7 @@ namespace gameplay_renderer {
 
         const std::size_t enemyIndex = ctx.stage->getEnemyIndexAt(cellX, cellY);
         const sf::Vector2i playerPos = ctx.stage->getPlayer().getPosition();
-        if (enemyIndex != ctx.stage->getEnnemies().size() &&
+        if (enemyIndex != ctx.stage->getEnemies().size() &&
             ctx.stage->hasLineOfSight(playerPos.x, playerPos.y, cellX, cellY)) {
             ctx.selectedEnemyIndex = enemyIndex;
             ctx.hoveredEnemyIndex = enemyIndex;

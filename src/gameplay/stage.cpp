@@ -4,6 +4,8 @@
 #include <cstdlib>
 #include <queue>
 #include <random>
+#include "../units/rat.hpp"
+#include "../units/goblin.hpp"
 
 Stage::Stage() : stageDepth(1), stageWidth(10), stageHeight(10) {
     regenerateForDepth();
@@ -25,7 +27,7 @@ void Stage::regenerateForDepth() {
         std::fill(map[y].begin(), map[y].end(), Grass);
     }
 
-    ennemies.clear();
+    enemies.clear();
 
     const sf::Vector2i playerSpawn(1, stageHeight / 2);
 
@@ -184,7 +186,7 @@ void Stage::regenerateForDepth() {
     }
 }
 
-bool Stage::addEnemy(const AEnnemy& enemy) {
+bool Stage::addEnemy(const AEnemy& enemy) {
     const sf::Vector2i position = enemy.getPosition();
     if (position.x < 0 || position.y < 0 || position.x >= stageWidth || position.y >= stageHeight) {
         return false;
@@ -198,27 +200,27 @@ bool Stage::addEnemy(const AEnnemy& enemy) {
         return false;
     }
 
-    ennemies.push_back(enemy);
+    enemies.push_back(enemy);
     return true;
 }
 
 std::size_t Stage::getEnemyIndexAt(int x, int y) const {
-    for (std::size_t i = 0; i < ennemies.size(); ++i) {
-        if (ennemies[i].getPosition() == sf::Vector2i(x, y)) {
+    for (std::size_t i = 0; i < enemies.size(); ++i) {
+        if (enemies[i].getPosition() == sf::Vector2i(x, y)) {
             return i;
         }
     }
 
-    return ennemies.size();
+    return enemies.size();
 }
 
-const AEnnemy* Stage::getEnemyAt(int x, int y) const {
+const AEnemy* Stage::getEnemyAt(int x, int y) const {
     const std::size_t index = getEnemyIndexAt(x, y);
-    if (index == ennemies.size()) {
+    if (index == enemies.size()) {
         return nullptr;
     }
 
-    return &ennemies[index];
+    return &enemies[index];
 }
 
 Stage::TileType Stage::getTileAt(int x, int y) const {
@@ -287,15 +289,16 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
     const int targetY = currentPos.y + deltaY;
 
     const std::size_t enemyIndex = getEnemyIndexAt(targetX, targetY);
-    if (enemyIndex != ennemies.size()) {
-        AEnnemy& targetEnemy = ennemies[enemyIndex];
+    if (enemyIndex != enemies.size()) {
+        AEnemy& targetEnemy = enemies[enemyIndex];
         const int damage = std::max(0, player.getAttack() - targetEnemy.getDefense());
         targetEnemy.takeDamage(damage);
 
         if (targetEnemy.getHealth() <= 0) {
             targetEnemy.dropExperience(player);
+            targetEnemy.tryDropItem(player);
             while (player.checkLevelUp()) {}
-            ennemies.erase(ennemies.begin() + static_cast<std::vector<AEnnemy>::difference_type>(enemyIndex));
+            enemies.erase(enemies.begin() + static_cast<std::vector<AEnemy>::difference_type>(enemyIndex));
             if (isWalkableTile(targetX, targetY)) {
                 player.setPosition(targetX, targetY);
             }
