@@ -5,12 +5,12 @@
 #include <queue>
 #include <random>
 
-Stage::Stage() : stageDepth(0), stageWidth(10), stageHeight(10) {
+Stage::Stage() : stageDepth(1), stageWidth(10), stageHeight(10) {
     regenerateForDepth();
 }
 
 void Stage::setDepth(int depth) {
-    stageDepth = std::max(0, depth);
+    stageDepth = std::max(1, depth);
     regenerateForDepth();
 }
 
@@ -155,6 +155,33 @@ void Stage::regenerateForDepth() {
             }
         }
     }
+
+    // Place one staircase on a random reachable grass tile (not on the player spawn).
+    std::vector<sf::Vector2i> staircaseCandidates;
+    staircaseCandidates.reserve(static_cast<std::size_t>(totalCells));
+    for (int y = 0; y < stageHeight; ++y) {
+        for (int x = 0; x < stageWidth; ++x) {
+            if (!reachable[y][x]) {
+                continue;
+            }
+            if (isReservedCell(x, y)) {
+                continue;
+            }
+            if (map[y][x] != Grass) {
+                continue;
+            }
+            if (getEnemyAt(x, y) != nullptr) {
+                continue;
+            }
+            staircaseCandidates.push_back(sf::Vector2i(x, y));
+        }
+    }
+
+    if (!staircaseCandidates.empty()) {
+        std::uniform_int_distribution<std::size_t> randomCandidate(0, staircaseCandidates.size() - 1);
+        const sf::Vector2i stairPos = staircaseCandidates[randomCandidate(randomEngine)];
+        map[stairPos.y][stairPos.x] = Staircase;
+    }
 }
 
 bool Stage::addEnemy(const AEnnemy& enemy) {
@@ -204,7 +231,7 @@ Stage::TileType Stage::getTileAt(int x, int y) const {
 
 bool Stage::isWalkableTile(int x, int y) const {
     const TileType tileType = getTileAt(x, y);
-    return tileType == Grass;
+    return tileType == Grass || tileType == Staircase;
 }
 
 bool Stage::blocksVision(int x, int y) const {
@@ -281,6 +308,11 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
     }
 
     player.setPosition(targetX, targetY);
+
+    if (getTileAt(targetX, targetY) == Staircase) {
+        advanceDepth();
+    }
+
     return true;
 }
 

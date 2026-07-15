@@ -12,6 +12,7 @@ class Stage {
             Grass = 0,
             Water = 1,
             Wall = 2,
+            Staircase = 3,
         };
 
         Stage();

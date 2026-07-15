@@ -10,12 +10,19 @@
 
 namespace gameplay_renderer {
     namespace {
+        float lerpFloat(float start, float end, float t) {
+            return start + ((end - start) * t);
+        }
+
         std::string tileTypeLabel(Stage::TileType tileType) {
             if (tileType == Stage::Water) {
                 return "water";
             }
             if (tileType == Stage::Wall) {
                 return "wall";
+            }
+            if (tileType == Stage::Staircase) {
+                return "staircase";
             }
             return "grass";
         }
@@ -353,6 +360,8 @@ namespace gameplay_renderer {
           selectedEnemyIndex(std::numeric_limits<std::size_t>::max()),
                   selectedGridX(-1), selectedGridY(-1), hasSelectedGrid(false), inventoryScreenOpen(false),
             inventorySelectingBackpack(false), inventorySelectedBackpackIndex(-1), inventorySelectedEquippedIndex(0),
+            stageDepthTextActive(false), stageDepthTextElapsed(0.f), stageDepthTextDuration(1.8f),
+            stageDepthText(""),
           uiFontLoaded(false) {}
 
     void updateGridLayout(GameLoopContext& ctx) {
@@ -416,7 +425,74 @@ namespace gameplay_renderer {
         }
 
         updateGridLayout(ctx);
+        triggerStageDepthText(ctx);
         return ctx;
+    }
+
+    void triggerStageDepthText(GameLoopContext& ctx) {
+        if (ctx.stage == nullptr) {
+            return;
+        }
+
+        ctx.stageDepthText = "Level " + std::to_string(ctx.stage->getDepth());
+        ctx.stageDepthTextElapsed = 0.f;
+        ctx.stageDepthTextActive = true;
+    }
+
+    void updateStageDepthText(GameLoopContext& ctx, float deltaSeconds) {
+        if (!ctx.stageDepthTextActive) {
+            return;
+        }
+
+        if (deltaSeconds < 0.f) {
+            deltaSeconds = 0.f;
+        }
+
+        ctx.stageDepthTextElapsed += deltaSeconds;
+        if (ctx.stageDepthTextElapsed >= ctx.stageDepthTextDuration) {
+            ctx.stageDepthTextElapsed = ctx.stageDepthTextDuration;
+            ctx.stageDepthTextActive = false;
+        }
+    }
+
+    void drawStageDepthText(GameLoopContext& ctx) {
+        if (!ctx.stageDepthTextActive || ctx.window == nullptr || !ctx.uiFontLoaded) {
+            return;
+        }
+
+        float progress = ctx.stageDepthTextElapsed / ctx.stageDepthTextDuration;
+        if (progress < 0.f) {
+            progress = 0.f;
+        }
+        if (progress > 1.f) {
+            progress = 1.f;
+        }
+
+        sf::Text bannerText(ctx.stageDepthText, ctx.uiFont, 64);
+        bannerText.setFillColor(sf::Color(255, 235, 160));
+        const sf::FloatRect bounds = bannerText.getLocalBounds();
+        bannerText.setOrigin(bounds.left + (bounds.width * 0.5f), bounds.top + (bounds.height * 0.5f));
+
+        const sf::Vector2u windowSize = ctx.window->getSize();
+        const float startX = -bounds.width;
+        const float centerX = static_cast<float>(windowSize.x) * 0.5f;
+        const float endX = static_cast<float>(windowSize.x) + bounds.width;
+        float x = centerX;
+        if (progress < 0.3f) {
+            x = lerpFloat(startX, centerX, progress / 0.3f);
+        } else if (progress > 0.7f) {
+            x = lerpFloat(centerX, endX, (progress - 0.7f) / 0.3f);
+        }
+
+        sf::RectangleShape bar;
+        bar.setSize(sf::Vector2f(static_cast<float>(windowSize.x), 90.f));
+        bar.setPosition(0.f, 40.f);
+        bar.setFillColor(sf::Color(10, 10, 10, 160));
+
+        bannerText.setPosition(x, 86.f);
+
+        ctx.window->draw(bar);
+        ctx.window->draw(bannerText);
     }
 
     bool listenGameEvents(Game& game, GameLoopContext& ctx) {
@@ -463,6 +539,7 @@ namespace gameplay_renderer {
                     }
                     continue;
                 }
+                const int depthBeforeAction = ctx.stage->getDepth();
                 if (event.key.code == sf::Keyboard::Q) {
                     ctx.stage->movePlayerBy(-1, 0);
                     playerAction = true;
@@ -497,12 +574,12 @@ namespace gameplay_renderer {
                     updateGridLayout(ctx);
                 }
 
-                if (playerAction && ctx.stage->getEnnemies().empty()) {
-                    ctx.stage->advanceDepth();
+                if (playerAction && ctx.stage->getDepth() != depthBeforeAction) {
                     ctx.selectedEnemyIndex = std::numeric_limits<std::size_t>::max();
                     ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
                     ctx.hasSelectedGrid = false;
                     updateGridLayout(ctx);
+                    triggerStageDepthText(ctx);
                 }
             }
         }

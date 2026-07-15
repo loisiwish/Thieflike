@@ -5,6 +5,7 @@
 #include <SFML/Graphics.hpp>
 
 #include <cstddef>
+#include <string>
 
 class Game;
 
@@ -40,6 +41,10 @@ namespace gameplay_renderer {
         bool inventorySelectingBackpack;
         int inventorySelectedBackpackIndex;
         int inventorySelectedEquippedIndex;
+        bool stageDepthTextActive;
+        float stageDepthTextElapsed;
+        float stageDepthTextDuration;
+        std::string stageDepthText;
         bool uiFontLoaded;
 
         GameLoopContext();
@@ -51,6 +56,9 @@ namespace gameplay_renderer {
     void drawStageGrid(GameLoopContext& ctx);
     void drawEnemyList(GameLoopContext& ctx);
     void drawInventoryScreen(GameLoopContext& ctx);
+    void triggerStageDepthText(GameLoopContext& ctx);
+    void updateStageDepthText(GameLoopContext& ctx, float deltaSeconds);
+    void drawStageDepthText(GameLoopContext& ctx);
     void updateEnemyListHover(GameLoopContext& ctx, int mouseX, int mouseY);
     void updateEnemyHoverFromGrid(GameLoopContext& ctx, int mouseX, int mouseY);
     void selectEnemyFromList(GameLoopContext& ctx, int mouseX, int mouseY);

@@ -1,5 +1,8 @@
 #include "gameplay_renderer.hpp"
 
+#include <algorithm>
+#include <cctype>
+
 namespace gameplay_renderer {
     void drawStageGrid(GameLoopContext& ctx) {
         if (!ctx.grid.valid) {
@@ -19,6 +22,8 @@ namespace gameplay_renderer {
                     ctx.tile.setFillColor(sf::Color(45, 110, 170));
                 } else if (tileType == Stage::Wall) {
                     ctx.tile.setFillColor(sf::Color::Black);
+                } else if (tileType == Stage::Staircase) {
+                    ctx.tile.setFillColor(sf::Color(215, 190, 80));
                 } else {
                     ctx.tile.setFillColor(sf::Color(45, 150, 55));
                 }
@@ -41,6 +46,28 @@ namespace gameplay_renderer {
             ctx.enemyCell.setPosition(ctx.grid.offsetX + (static_cast<float>(enemyPos.x) * ctx.grid.cellSize) + 1.f,
                                       ctx.grid.offsetY + (static_cast<float>(enemyPos.y) * ctx.grid.cellSize) + 1.f);
             ctx.window->draw(ctx.enemyCell);
+
+            if (ctx.uiFontLoaded) {
+                const std::string enemyName = ennemies[i].getName();
+                const char letter = enemyName.empty()
+                                        ? '?'
+                                        : static_cast<char>(std::toupper(static_cast<unsigned char>(enemyName[0])));
+
+                const unsigned int characterSize = static_cast<unsigned int>(std::max(12.f, ctx.grid.cellSize * 0.55f));
+                sf::Text enemyInitial(std::string(1, letter), ctx.uiFont, characterSize);
+                enemyInitial.setFillColor(sf::Color::White);
+
+                const sf::FloatRect textBounds = enemyInitial.getLocalBounds();
+                enemyInitial.setOrigin(textBounds.left + (textBounds.width * 0.5f),
+                                       textBounds.top + (textBounds.height * 0.5f));
+
+                const sf::Vector2f enemyPosPx = ctx.enemyCell.getPosition();
+                const sf::Vector2f enemySize = ctx.enemyCell.getSize();
+                enemyInitial.setPosition(enemyPosPx.x + (enemySize.x * 0.5f),
+                                         enemyPosPx.y + (enemySize.y * 0.5f));
+
+                ctx.window->draw(enemyInitial);
+            }
         }
 
         if (ctx.hasSelectedGrid) {
