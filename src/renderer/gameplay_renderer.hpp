@@ -69,4 +69,6 @@ namespace gameplay_renderer {
     void selectGridCell(GameLoopContext& ctx, int mouseX, int mouseY);
     void moveSelectedGridCell(GameLoopContext& ctx, int deltaX, int deltaY);
     void drawGridDetails(GameLoopContext& ctx);
+    std::string wrapTextToWidth(const std::string& text, const sf::Font& font, unsigned int characterSize, float maxWidth);
+    void handleInventoryKey(GameLoopContext& ctx, sf::Keyboard::Key key);
 }

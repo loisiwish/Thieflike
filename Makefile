@@ -9,6 +9,7 @@ SRC = src/main.cpp	\
 	src/gameplay/stage.cpp	\
 	src/renderer/gameplay_renderer.cpp	\
 	src/renderer/gameplay_renderer_interactions.cpp	\
+	src/renderer/inventory_renderer.cpp	\
 	src/renderer/tile_renderer.cpp	\
 	src/gameplay/game_loop.cpp	\
 	src/gameplay/rewards.cpp	\
