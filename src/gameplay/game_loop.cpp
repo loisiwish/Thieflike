@@ -1,5 +1,5 @@
 #include "game_loop.hpp"
-#include "gameplay_renderer.hpp"
+#include "../renderer/gameplay_renderer.hpp"
 #include "../window/game.hpp"
 
 #include <SFML/System/Clock.hpp>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "stage.hpp"
+#include "../gameplay/stage.hpp"
 
 #include <SFML/Graphics.hpp>
 
