@@ -15,7 +15,7 @@ class Skeleton: public AEnemy {
             setName("Skeleton");
             setDescription("An undead creature.");
             setExperienceMultiplier(1.3f);
-            setItemDropRate(0.25f);
+            setItemDropRate(0.3f);
         }
         ~Skeleton() {}
 };

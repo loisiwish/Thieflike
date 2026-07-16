@@ -133,21 +133,24 @@ class AEnemy : public IEnemy {
             const int healthBonus = std::max(0, baseValue * 2);
             const int moveSpeedBonus = std::max(0, baseValue / 3);
 
-            // ~25 % chance to drop a potion instead of gear.
+            // ~50 % chance to drop a potion instead of gear.
             std::uniform_real_distribution<float> potionRoll(0.f, 1.f);
-            if (potionRoll(rng) < 0.25f) {
-                const int healAmt = std::max(5, effectiveLevel * 4);
+            if (potionRoll(rng) < 0.50f) {
                 std::string potionName;
+                int healAmt = 50;
                 Item::Rarity potionRarity = Item::Rarity::Common;
-                if (effectiveLevel >= 8) {
+                if (effectiveLevel >= 15) {
                     potionName = "Major Healing Potion";
+                    healAmt = 50;
                     potionRarity = Item::Rarity::Rare;
-                } else if (effectiveLevel >= 4) {
+                } else if (effectiveLevel >= 8) {
                     potionName = "Healing Potion";
+                    healAmt = 25;
                     potionRarity = Item::Rarity::Uncommon;
                 } else {
                     potionName = "Minor Healing Potion";
-                }
+                    healAmt = 10;
+                }                
                 player.getInventory().addItem(Item::createPotion(potionName, healAmt, potionRarity));
                 return true;
             }

@@ -6,7 +6,7 @@ class Goblin: public AEnemy {
     public:
         Goblin() : AEnemy() {
             setHealth(8);
-            setAttack(3);
+            setAttack(2);
             setDefense(2);
             setRange(1);
             setLevel(2);
@@ -14,7 +14,7 @@ class Goblin: public AEnemy {
             setName("Goblin");
             setDescription("A small, green-skinned humanoid creature.");
             setExperienceMultiplier(1.0f);
-            setItemDropRate(0.2f);
+            setItemDropRate(0.25f);
         }
         ~Goblin() {}
 };

@@ -6,7 +6,7 @@
 class Rat: public AEnemy {
     public:
         Rat() : AEnemy() {
-            setHealth(5);
+            setHealth(3);
             setAttack(2);
             setDefense(1);
             setRange(1);
@@ -15,7 +15,7 @@ class Rat: public AEnemy {
             setName("Rat");
             setDescription("A small, quick, and aggressive rodent. It can be a nuisance in large numbers, but is relatively weak on its own.");
             setExperienceMultiplier(1.0f);
-            setItemDropRate(0.1f);
+            setItemDropRate(0.2f);
         }
         ~Rat() {}
 };
