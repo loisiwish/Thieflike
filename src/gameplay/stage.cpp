@@ -9,6 +9,9 @@
 #include "../units/troll.hpp"
 #include "../units/ogre.hpp"
 #include "../units/basilisk.hpp"
+#include "../units/dragon.hpp"
+#include "../units/skeleton.hpp"
+#include "../units/wyvern.hpp"
 
 Stage::Stage() : staircaseUnlocked(false), stageDepth(1), stageWidth(10), stageHeight(10) {
     regenerateForDepth();
@@ -121,18 +124,21 @@ void Stage::regenerateForDepth() {
     }
 
     // Depth controls enemy count and composition.
-    const int targetEnemyCount = 2 + stageDepth;
+    const int targetEnemyCount = 1 + stageDepth;
     const int maxEnemyCount = std::max(1, totalCells / 3);
     const int enemyCount = std::min(targetEnemyCount, maxEnemyCount);
 
     auto createEnemyForDepth = [&]() {
-        const int ratWeight = std::max(1, 6 - stageDepth);
-        const int goblinWeight = std::min(8, 2 + stageDepth);
-        const int trollWeight = stageDepth >= 3 ? (stageDepth - 1) : 0;
+        const int ratWeight = std::max(5, 10 - stageDepth);
+        const int goblinWeight = std::min(8, stageDepth);
+        const int skeletonWeight = std::min(12, stageDepth - 1);
+        const int trollWeight = stageDepth >= 3 ? (stageDepth - 2) : 0;
         const int ogreWeight = stageDepth >= 5 ? (stageDepth - 3) : 0;
-        const int basiliskWeight = stageDepth >= 8 ? (stageDepth - 6) : 0;
+        const int basiliskWeight = stageDepth >= 8 ? (stageDepth - 5) : 0;
+        const int wyvernWeight = stageDepth >= 11 ? (stageDepth - 8) : 0;
+        const int dragonWeight = stageDepth >= 15 ? (stageDepth - 14) : 0;
 
-        const int totalWeight = ratWeight + goblinWeight + trollWeight + ogreWeight + basiliskWeight;
+        const int totalWeight = ratWeight + goblinWeight + skeletonWeight + trollWeight + ogreWeight + basiliskWeight + wyvernWeight + dragonWeight;
         std::uniform_int_distribution<int> enemyRoll(1, totalWeight);
         int roll = enemyRoll(randomEngine);
 
@@ -146,6 +152,11 @@ void Stage::regenerateForDepth() {
             return AEnemy(Goblin());
         }
 
+        roll -= skeletonWeight;
+        if (roll <= 0) {
+            return AEnemy(Skeleton());
+        }
+
         roll -= trollWeight;
         if (roll <= 0) {
             return AEnemy(Troll());
@@ -156,7 +167,17 @@ void Stage::regenerateForDepth() {
             return AEnemy(Ogre());
         }
 
-        return AEnemy(Basilisk());
+        roll -= basiliskWeight;
+        if (roll <= 0) {
+            return AEnemy(Basilisk());
+        }
+
+        roll -= wyvernWeight;
+        if (roll <= 0) {
+            return AEnemy(Wyvern());
+        }
+
+        return AEnemy(Dragon());
     };
 
     int spawned = 0;
