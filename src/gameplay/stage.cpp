@@ -332,7 +332,10 @@ bool Stage::canRangedAttack(int fromX, int fromY, int toX, int toY, Player &play
     if (blocksVision(toX, toY)) {
         return false;
     }
-    if (player.getRange() < std::max(std::abs(toX - fromX), std::abs(toY - fromY))) {
+    const int dx = std::abs(toX - fromX);
+    const int dy = std::abs(toY - fromY);
+    const int diagonalCost = (dx > 0 && dy > 0) ? 1 : 0;
+    if (player.getRange() < std::max(dx, dy) + diagonalCost) {
         return false;
     }
 
@@ -347,7 +350,7 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
     const std::size_t enemyIndex = getEnemyIndexAt(targetX, targetY);
     if (enemyIndex != enemies.size()) {
         AEnemy& targetEnemy = enemies[enemyIndex];
-        const int damage = std::max(0, player.getAttack() - targetEnemy.getDefense());
+        const int damage = std::max(1, player.getAttack() - targetEnemy.getDefense());
         targetEnemy.takeDamage(damage);
 
         if (targetEnemy.getHealth() <= 0) {
@@ -380,15 +383,83 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
 
 void Stage::performEnemiesTurn() {
     const auto isCellOccupiedByOtherEnemy = [&](int x, int y, std::size_t selfIndex) {
-        for (std::size_t index = 0; index < enemies.size(); ++index) {
-            if (index == selfIndex) {
+        for (std::size_t i = 0; i < enemies.size(); ++i) {
+            if (i == selfIndex) {
                 continue;
             }
-            if (enemies[index].getPosition() == sf::Vector2i(x, y)) {
+            if (enemies[i].getPosition() == sf::Vector2i(x, y)) {
                 return true;
             }
         }
         return false;
+    };
+
+    // BFS: returns the cell an enemy at `from` should step into to reach `target` along
+    // the shortest walkable path, or `from` if no path exists.
+    const auto bfsNextStep = [&](const sf::Vector2i& from,
+                                  const sf::Vector2i& target,
+                                  std::size_t selfIndex) -> sf::Vector2i {
+        const int dirs[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+
+        std::vector<std::vector<bool>> visited(stageHeight, std::vector<bool>(stageWidth, false));
+        std::vector<std::vector<sf::Vector2i>> cameFrom(
+            stageHeight, std::vector<sf::Vector2i>(stageWidth, sf::Vector2i(-1, -1)));
+
+        visited[from.y][from.x] = true;
+        cameFrom[from.y][from.x] = from;
+
+        std::queue<sf::Vector2i> frontier;
+        frontier.push(from);
+
+        bool reached = false;
+        while (!frontier.empty() && !reached) {
+            const sf::Vector2i curr = frontier.front();
+            frontier.pop();
+
+            for (const int (&d)[2] : dirs) {
+                const sf::Vector2i next(curr.x + d[0], curr.y + d[1]);
+                if (next.x < 0 || next.y < 0 || next.x >= stageWidth || next.y >= stageHeight) {
+                    continue;
+                }
+                if (visited[next.y][next.x]) {
+                    continue;
+                }
+                // The target tile (player) is always treated as passable so BFS can terminate.
+                // Other enemy tiles and impassable tiles block movement.
+                if (next != target && !isWalkableTile(next.x, next.y)) {
+                    continue;
+                }
+                if (next != target && isCellOccupiedByOtherEnemy(next.x, next.y, selfIndex)) {
+                    continue;
+                }
+
+                visited[next.y][next.x] = true;
+                cameFrom[next.y][next.x] = curr;
+
+                if (next == target) {
+                    reached = true;
+                    break;
+                }
+                frontier.push(next);
+            }
+        }
+
+        if (!reached) {
+            return from;
+        }
+
+        // Trace the path back from target to find the first step after `from`.
+        sf::Vector2i step = target;
+        while (cameFrom[step.y][step.x] != from) {
+            step = cameFrom[step.y][step.x];
+        }
+
+        // Never physically step onto the player's tile — only attack into it.
+        if (step == target) {
+            return from;
+        }
+
+        return step;
     };
 
     for (std::size_t index = 0; index < enemies.size(); ++index) {
@@ -403,53 +474,23 @@ void Stage::performEnemiesTurn() {
             }
 
             const int distance = std::max(std::abs(playerPos.x - enemyPos.x), std::abs(playerPos.y - enemyPos.y));
-            if (distance <= enemy.getRange()) {
+            const int diagonalCost = (playerPos.x != enemyPos.x && playerPos.y != enemyPos.y) ? 1 : 0;
+            if (distance + diagonalCost <= enemy.getRange()) {
                 enemy.dealDamage(player);
                 break;
             }
 
-            const int directions[4][2] = {
-                {1, 0},
-                {-1, 0},
-                {0, 1},
-                {0, -1},
-            };
-
-            int bestDeltaX = 0;
-            int bestDeltaY = 0;
-            int bestDistance = distance;
-
-            for (const auto& direction : directions) {
-                const int nextX = enemyPos.x + direction[0];
-                const int nextY = enemyPos.y + direction[1];
-
-                if (sf::Vector2i(nextX, nextY) == playerPos) {
-                    continue;
-                }
-                if (!isWalkableTile(nextX, nextY)) {
-                    continue;
-                }
-                if (isCellOccupiedByOtherEnemy(nextX, nextY, index)) {
-                    continue;
-                }
-
-                const int nextDistance = std::max(std::abs(playerPos.x - nextX), std::abs(playerPos.y - nextY));
-                if (nextDistance < bestDistance) {
-                    bestDistance = nextDistance;
-                    bestDeltaX = direction[0];
-                    bestDeltaY = direction[1];
-                }
-            }
-
-            if (bestDeltaX == 0 && bestDeltaY == 0) {
+            const sf::Vector2i nextPos = bfsNextStep(enemyPos, playerPos, index);
+            if (nextPos == enemyPos) {
                 break;
             }
 
-            enemy.move(bestDeltaX, bestDeltaY);
+            enemy.move(nextPos.x - enemyPos.x, nextPos.y - enemyPos.y);
 
             const sf::Vector2i updatedEnemyPos = enemy.getPosition();
             const int updatedDistance = std::max(std::abs(playerPos.x - updatedEnemyPos.x), std::abs(playerPos.y - updatedEnemyPos.y));
-            if (updatedDistance <= enemy.getRange() &&
+            const int updatedDiagonalCost = (playerPos.x != updatedEnemyPos.x && playerPos.y != updatedEnemyPos.y) ? 1 : 0;
+            if (updatedDistance + updatedDiagonalCost <= enemy.getRange() &&
                 hasLineOfSight(updatedEnemyPos.x, updatedEnemyPos.y, playerPos.x, playerPos.y)) {
                 enemy.dealDamage(player);
                 break;

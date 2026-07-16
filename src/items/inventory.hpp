@@ -51,6 +51,21 @@ class Inventory {
             }
         }
 
+        // Returns heal amount and removes item if it is a consumable, else returns 0.
+        int consumeFromBackpack(std::size_t index) {
+            if (index >= backpack.size()) {
+                return 0;
+            }
+            const Item& item = backpack[index];
+            if (item.getCategory() != Item::Category::Consumable) {
+                return 0;
+            }
+            const int heal = item.getHealAmount();
+            backpack.erase(backpack.begin() + static_cast<std::vector<Item>::difference_type>(index));
+            syncLegacyItems();
+            return heal;
+        }
+
         bool equipFromBackpack(std::size_t index, Item::Slot requestedSlot = Item::Slot::Auto) {
             if (index >= backpack.size()) {
                 return false;

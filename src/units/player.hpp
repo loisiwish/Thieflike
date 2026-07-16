@@ -29,14 +29,20 @@ class Player {
         Inventory& getInventory() { return inventory; }
         const Inventory& getInventory() const { return inventory; }
         int get_damaged(int damage) {
-            int effective_damage = damage - getDefense();
-            if (effective_damage < 0) effective_damage = 0;
-            health -= effective_damage;
-            if (health < 0) {
+            health -= damage;
+            if (health < 0)
                 health = 0;
-                // TODO : kill player, back to menus
+            return damage;
+        }
+        void heal(int amount) {
+            if (amount <= 0) {
+                return;
             }
-            return effective_damage;
+            const int baseMax = getMaxHealth() - inventory.getTotalHealthBonus();
+            health += amount;
+            if (health > baseMax) {
+                health = baseMax;
+            }
         }
         int getAttack() const { return base_attack + inventory.getTotalAttackBonus(); }
         int getDefense() const { return base_defense + inventory.getTotalDefenseBonus(); }

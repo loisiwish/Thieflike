@@ -24,6 +24,8 @@ namespace gameplay_renderer {
                     return "Boots";
                 case Item::Category::Jewelry:
                     return "Jewelry";
+                case Item::Category::Consumable:
+                    return "Consumable";
                 case Item::Category::None:
                 default:
                     return "None";
@@ -193,8 +195,17 @@ namespace gameplay_renderer {
             if (keyCode == sf::Keyboard::Enter || keyCode == sf::Keyboard::Space) {
                 if (ctx.inventorySelectingBackpack) {
                     if (ctx.inventorySelectedBackpackIndex >= 0) {
-                        inventory.equipFromBackpack(static_cast<std::size_t>(ctx.inventorySelectedBackpackIndex),
-                                                    Item::Slot::Auto);
+                        const std::size_t selectedIdx = static_cast<std::size_t>(ctx.inventorySelectedBackpackIndex);
+                        const std::vector<Item>& backpackItems = inventory.getBackpackItems();
+                        if (selectedIdx < backpackItems.size() &&
+                            backpackItems[selectedIdx].getCategory() == Item::Category::Consumable) {
+                            const int healAmt = inventory.consumeFromBackpack(selectedIdx);
+                            if (healAmt > 0) {
+                                player.heal(healAmt);
+                            }
+                        } else {
+                            inventory.equipFromBackpack(selectedIdx, Item::Slot::Auto);
+                        }
                         clampInventorySelection(ctx);
                     }
                 } else {
@@ -228,6 +239,9 @@ namespace gameplay_renderer {
             if (item.getHealthBonus() != 0) {
                 summary += " HP+" + std::to_string(item.getHealthBonus());
             }
+            if (item.getHealAmount() != 0) {
+                summary += "  Heals " + std::to_string(item.getHealAmount()) + " HP";
+            }
 
             return summary;
         }
@@ -252,7 +266,7 @@ namespace gameplay_renderer {
         title.setPosition(contentX, contentY);
         ctx.window->draw(title);
 
-        sf::Text hint("Tab/I: close | Left/Right: panel | Up/Down: select | Enter: equip/unequip | 1-3: spend skill point", ctx.uiFont, 18);
+        sf::Text hint("Tab/I: close | Left/Right: panel | Up/Down: select | Enter: equip/unequip/use | 1-3: spend skill point", ctx.uiFont, 18);
         hint.setFillColor(sf::Color(180, 180, 180));
         hint.setPosition(contentX, contentY + 46.f);
         ctx.window->draw(hint);

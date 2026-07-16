@@ -5,6 +5,8 @@
 #include <random>
 #include <string>
 
+#include <iostream> //TEMP
+
 #include "player.hpp"
 
 class IEnemy {
@@ -64,9 +66,9 @@ class AEnemy : public IEnemy {
         void setDefense(int defense) override { base_defense = defense; }
         void setRange(int range) override { base_range = range; }
         int dealDamage(Player& player) const override { 
-            int damage = base_attack - player.getDefense();
+            int damage = std::max(1, base_attack - player.getDefense());
             player.get_damaged(damage);
-            return damage > 0 ? damage : 0;
+            return damage;
         }
         sf::Vector2i getPosition() const override { return position; }
         std::string getName() const override { return name; }
@@ -130,6 +132,25 @@ class AEnemy : public IEnemy {
             const int rangeBonus = std::max(0, baseValue / 2);
             const int healthBonus = std::max(0, baseValue * 2);
             const int moveSpeedBonus = std::max(0, baseValue / 3);
+
+            // ~25 % chance to drop a potion instead of gear.
+            std::uniform_real_distribution<float> potionRoll(0.f, 1.f);
+            if (potionRoll(rng) < 0.25f) {
+                const int healAmt = std::max(5, effectiveLevel * 4);
+                std::string potionName;
+                Item::Rarity potionRarity = Item::Rarity::Common;
+                if (effectiveLevel >= 8) {
+                    potionName = "Major Healing Potion";
+                    potionRarity = Item::Rarity::Rare;
+                } else if (effectiveLevel >= 4) {
+                    potionName = "Healing Potion";
+                    potionRarity = Item::Rarity::Uncommon;
+                } else {
+                    potionName = "Minor Healing Potion";
+                }
+                player.getInventory().addItem(Item::createPotion(potionName, healAmt, potionRarity));
+                return true;
+            }
 
             std::uniform_int_distribution<int> categoryRoll(0, 6);
             const int category = categoryRoll(rng);

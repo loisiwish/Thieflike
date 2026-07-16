@@ -12,7 +12,8 @@ class Item {
             Gauntlets,
             LegsArmor,
             Boots,
-            Jewelry
+            Jewelry,
+            Consumable
         };
 
         enum class Slot {
@@ -24,7 +25,8 @@ class Item {
             Gauntlets,
             LegsArmor,
             Boots,
-            Jewelry
+            Jewelry,
+            Consumable
         };
 
         enum class WeaponHandling {
@@ -57,6 +59,7 @@ class Item {
               rangeBonus(0),
               healthBonus(0),
               moveSpeedBonus(0),
+              healAmount(0),
               rarity(Rarity::Common) {}
 
         static Item createHeadpiece(const std::string& name,
@@ -107,6 +110,17 @@ class Item {
                                 int moveSpeed = 0,
                                 Rarity rarity = Rarity::Common) {
             return createArmor(Category::Boots, name, attack, defense, range, health, moveSpeed, rarity);
+        }
+
+        static Item createPotion(const std::string& name,
+                               int heal,
+                               Rarity rarity = Rarity::Common) {
+            Item item;
+            item.name = name;
+            item.category = Category::Consumable;
+            item.healAmount = heal;
+            item.rarity = rarity;
+            return item;
         }
 
         static Item createJewelry(const std::string& name,
@@ -161,6 +175,7 @@ class Item {
         int getRangeBonus() const { return rangeBonus; }
         int getHealthBonus() const { return healthBonus; }
         int getMoveSpeedBonus() const { return moveSpeedBonus; }
+        int getHealAmount() const { return healAmount; }
         Rarity getRarity() const { return rarity; }
 
         bool isTwoHandedWeapon() const {
@@ -186,6 +201,7 @@ class Item {
                         return slot == Slot::MainHand;
                     }
                     return slot == Slot::MainHand || slot == Slot::OffHand;
+                case Category::Consumable:
                 case Category::None:
                 default:
                     return false;
@@ -222,5 +238,6 @@ class Item {
         int rangeBonus;
         int healthBonus;
         int moveSpeedBonus;
+        int healAmount;
         Rarity rarity;
 };
