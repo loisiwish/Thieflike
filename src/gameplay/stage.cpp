@@ -6,6 +6,9 @@
 #include <random>
 #include "../units/rat.hpp"
 #include "../units/goblin.hpp"
+#include "../units/troll.hpp"
+#include "../units/ogre.hpp"
+#include "../units/basilisk.hpp"
 
 Stage::Stage() : staircaseUnlocked(false), stageDepth(1), stageWidth(10), stageHeight(10) {
     regenerateForDepth();
@@ -121,8 +124,40 @@ void Stage::regenerateForDepth() {
     const int targetEnemyCount = 2 + stageDepth;
     const int maxEnemyCount = std::max(1, totalCells / 3);
     const int enemyCount = std::min(targetEnemyCount, maxEnemyCount);
-    const float goblinChance = std::min(0.15f * static_cast<float>(stageDepth), 0.80f);
-    std::uniform_real_distribution<float> randomChance(0.f, 1.f);
+
+    auto createEnemyForDepth = [&]() {
+        const int ratWeight = std::max(1, 6 - stageDepth);
+        const int goblinWeight = std::min(8, 2 + stageDepth);
+        const int trollWeight = stageDepth >= 3 ? (stageDepth - 1) : 0;
+        const int ogreWeight = stageDepth >= 5 ? (stageDepth - 3) : 0;
+        const int basiliskWeight = stageDepth >= 8 ? (stageDepth - 6) : 0;
+
+        const int totalWeight = ratWeight + goblinWeight + trollWeight + ogreWeight + basiliskWeight;
+        std::uniform_int_distribution<int> enemyRoll(1, totalWeight);
+        int roll = enemyRoll(randomEngine);
+
+        roll -= ratWeight;
+        if (roll <= 0) {
+            return AEnemy(Rat());
+        }
+
+        roll -= goblinWeight;
+        if (roll <= 0) {
+            return AEnemy(Goblin());
+        }
+
+        roll -= trollWeight;
+        if (roll <= 0) {
+            return AEnemy(Troll());
+        }
+
+        roll -= ogreWeight;
+        if (roll <= 0) {
+            return AEnemy(Ogre());
+        }
+
+        return AEnemy(Basilisk());
+    };
 
     int spawned = 0;
     int attempts = 0;
@@ -144,18 +179,10 @@ void Stage::regenerateForDepth() {
             continue;
         }
 
-        if (randomChance(randomEngine) < goblinChance) {
-            Goblin goblin;
-            goblin.setPosition(x, y);
-            if (addEnemy(goblin)) {
-                ++spawned;
-            }
-        } else {
-            Rat rat;
-            rat.setPosition(x, y);
-            if (addEnemy(rat)) {
-                ++spawned;
-            }
+        AEnemy enemy = createEnemyForDepth();
+        enemy.setPosition(x, y);
+        if (addEnemy(enemy)) {
+            ++spawned;
         }
     }
 

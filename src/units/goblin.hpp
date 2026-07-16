@@ -5,7 +5,8 @@
 class Goblin: public AEnemy {
     public:
         Goblin() : AEnemy() {
-            setAttack(4);
+            setHealth(8);
+            setAttack(3);
             setDefense(2);
             setRange(1);
             setLevel(2);

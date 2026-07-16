@@ -6,6 +6,7 @@
 class Rat: public AEnemy {
     public:
         Rat() : AEnemy() {
+            setHealth(5);
             setAttack(2);
             setDefense(1);
             setRange(1);

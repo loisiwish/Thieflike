@@ -21,6 +21,7 @@ class IEnemy {
         virtual int getRange() const = 0;
         virtual int getLevel() const = 0;
         virtual int getMoveSpeed() const = 0;
+        virtual void setHealth(int health) = 0;
         virtual void setMoveSpeed(int speed) = 0;
         virtual void setLevel(int level) = 0;
         virtual void setAttack(int attack) = 0;
@@ -49,6 +50,7 @@ class AEnemy : public IEnemy {
 
         void takeDamage(int damage) override { health -= damage; }
         int getHealth() const override { return health; }
+        void setHealth(int hp) override { health = hp; }
         void setPosition(int x, int y) override { position = sf::Vector2i(x, y); }
         void move(int dx, int dy) override { position += sf::Vector2i(dx, dy); }
         int getAttack() const override { return base_attack; }
