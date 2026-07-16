@@ -347,11 +347,47 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
     const int targetX = currentPos.x + deltaX;
     const int targetY = currentPos.y + deltaY;
 
+    const auto handleEnemyDeath = [&](std::size_t enemyIndex, bool moveIntoTile) {
+        if (enemyIndex >= enemies.size()) {
+            return;
+        }
+
+        AEnemy& targetEnemy = enemies[enemyIndex];
+        if (targetEnemy.getCarriesStairKey()) {
+            staircaseUnlocked = true;
+        }
+        targetEnemy.dropExperience(player);
+        targetEnemy.tryDropItem(player);
+        while (player.checkLevelUp()) {}
+        enemies.erase(enemies.begin() + static_cast<std::vector<AEnemy>::difference_type>(enemyIndex));
+        if (moveIntoTile && isWalkableTile(targetX, targetY)) {
+            player.setPosition(targetX, targetY);
+        }
+    };
+
     const std::size_t enemyIndex = getEnemyIndexAt(targetX, targetY);
     if (enemyIndex != enemies.size()) {
         AEnemy& targetEnemy = enemies[enemyIndex];
-        const int damage = std::max(1, player.getAttack() - targetEnemy.getDefense());
+        const int separation = std::max(std::abs(targetX - currentPos.x), std::abs(targetY - currentPos.y));
+        const int sniperBonus = player.getSniper() * separation;
+        const int damage = std::max(1, player.getAttack() + sniperBonus - targetEnemy.getDefense());
         targetEnemy.takeDamage(damage);
+
+        if (player.getPoisonnedWeapon() > 0) {
+            int poisonDamage = 0;
+            int poisonTurns = 0;
+            if (player.getPoisonnedWeapon() == 1) {
+                poisonDamage = 1;
+                poisonTurns = 2;
+            } else if (player.getPoisonnedWeapon() == 2) {
+                poisonDamage = 3;
+                poisonTurns = 3;
+            } else {
+                poisonDamage = 10;
+                poisonTurns = 5;
+            }
+            targetEnemy.applyPoison(poisonDamage, poisonTurns);
+        }
 
         if (player.getLifesteal() == 1)
             player.heal(1);
@@ -363,16 +399,7 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
             player.heal(damage);
 
         if (targetEnemy.getHealth() <= 0) {
-            if (targetEnemy.getCarriesStairKey()) {
-                staircaseUnlocked = true;
-            }
-            targetEnemy.dropExperience(player);
-            targetEnemy.tryDropItem(player);
-            while (player.checkLevelUp()) {}
-            enemies.erase(enemies.begin() + static_cast<std::vector<AEnemy>::difference_type>(enemyIndex));
-            if (isWalkableTile(targetX, targetY)) {
-                player.setPosition(targetX, targetY);
-            }
+            handleEnemyDeath(enemyIndex, true);
         }
         return true;
     }
@@ -392,7 +419,7 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
 
 bool Stage::playerRangedAttack(int targetX, int targetY) {
     const sf::Vector2i playerPos = player.getPosition();
-    if (!player.hasRangedWeaponEquipped()) {
+    if (!player.canAttackAtRange()) {
         return false;
     }
     if (!canRangedAttack(playerPos.x, playerPos.y, targetX, targetY, player)) {
@@ -405,8 +432,26 @@ bool Stage::playerRangedAttack(int targetX, int targetY) {
     }
 
     AEnemy& targetEnemy = enemies[enemyIndex];
-    const int damage = std::max(1, player.getAttack() - targetEnemy.getDefense());
+    const int separation = std::max(std::abs(targetX - playerPos.x), std::abs(targetY - playerPos.y));
+    const int sniperBonus = player.getSniper() * separation;
+    const int damage = std::max(1, player.getAttack() + sniperBonus - targetEnemy.getDefense());
     targetEnemy.takeDamage(damage);
+
+    if (player.getPoisonnedWeapon() > 0) {
+        int poisonDamage = 0;
+        int poisonTurns = 0;
+        if (player.getPoisonnedWeapon() == 1) {
+            poisonDamage = 1;
+            poisonTurns = 2;
+        } else if (player.getPoisonnedWeapon() == 2) {
+            poisonDamage = 3;
+            poisonTurns = 3;
+        } else {
+            poisonDamage = 10;
+            poisonTurns = 5;
+        }
+        targetEnemy.applyPoison(poisonDamage, poisonTurns);
+    }
 
     if (player.getLifesteal() == 1)
         player.heal(1);
@@ -511,9 +556,34 @@ void Stage::performEnemiesTurn() {
         return step;
     };
 
-    for (std::size_t index = 0; index < enemies.size(); ++index) {
+    const auto handleEnemyDeath = [&](std::size_t enemyIndex) {
+        if (enemyIndex >= enemies.size()) {
+            return;
+        }
+
+        AEnemy& targetEnemy = enemies[enemyIndex];
+        if (targetEnemy.getCarriesStairKey()) {
+            staircaseUnlocked = true;
+        }
+        targetEnemy.dropExperience(player);
+        targetEnemy.tryDropItem(player);
+        while (player.checkLevelUp()) {}
+        enemies.erase(enemies.begin() + static_cast<std::vector<AEnemy>::difference_type>(enemyIndex));
+    };
+
+    std::size_t index = 0;
+    while (index < enemies.size()) {
         AEnemy& enemy = enemies[index];
 
+        if (enemy.hasActivePoison()) {
+            enemy.tickPoison();
+            if (enemy.getHealth() <= 0) {
+                handleEnemyDeath(index);
+                continue;
+            }
+        }
+
+        bool enemyRemoved = false;
         for (int step = 0; step < enemy.getMoveSpeed(); ++step) {
             const sf::Vector2i playerPos = player.getPosition();
             const sf::Vector2i enemyPos = enemy.getPosition();
@@ -525,7 +595,24 @@ void Stage::performEnemiesTurn() {
             const int distance = std::max(std::abs(playerPos.x - enemyPos.x), std::abs(playerPos.y - enemyPos.y));
             const int diagonalCost = (playerPos.x != enemyPos.x && playerPos.y != enemyPos.y) ? 1 : 0;
             if (distance + diagonalCost <= enemy.getRange()) {
-                enemy.dealDamage(player);
+                const int dealt = enemy.dealDamage(player);
+                if (dealt > 0 && player.getThorns() > 0) {
+                    int reflectDamage = 0;
+                    if (player.getThorns() == 1) {
+                        reflectDamage = std::max(1, player.getDefense() / 2);
+                    } else if (player.getThorns() == 2) {
+                        reflectDamage = std::max(1, player.getDefense());
+                    } else {
+                        reflectDamage = std::max(1, player.getDefense() * 2);
+                    }
+
+                    enemy.takeDamage(reflectDamage);
+                    if (enemy.getHealth() <= 0) {
+                        handleEnemyDeath(index);
+                        enemyRemoved = true;
+                        break;
+                    }
+                }
                 break;
             }
 
@@ -541,10 +628,33 @@ void Stage::performEnemiesTurn() {
             const int updatedDiagonalCost = (playerPos.x != updatedEnemyPos.x && playerPos.y != updatedEnemyPos.y) ? 1 : 0;
             if (updatedDistance + updatedDiagonalCost <= enemy.getRange() &&
                 hasLineOfSight(updatedEnemyPos.x, updatedEnemyPos.y, playerPos.x, playerPos.y)) {
-                enemy.dealDamage(player);
+                const int dealt = enemy.dealDamage(player);
+                if (dealt > 0 && player.getThorns() > 0) {
+                    int reflectDamage = 0;
+                    if (player.getThorns() == 1) {
+                        reflectDamage = std::max(1, player.getDefense() / 2);
+                    } else if (player.getThorns() == 2) {
+                        reflectDamage = std::max(1, player.getDefense());
+                    } else {
+                        reflectDamage = std::max(1, player.getDefense() * 2);
+                    }
+
+                    enemy.takeDamage(reflectDamage);
+                    if (enemy.getHealth() <= 0) {
+                        handleEnemyDeath(index);
+                        enemyRemoved = true;
+                        break;
+                    }
+                }
                 break;
             }
         }
+
+        if (enemyRemoved) {
+            continue;
+        }
+
+        ++index;
     }
 }
 

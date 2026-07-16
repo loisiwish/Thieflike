@@ -11,6 +11,19 @@
 class Game;
 
 namespace gameplay_renderer {
+    struct PowerChoiceOption {
+        std::string name;
+        std::string description;
+        int level;
+        int maxLevel;
+
+        PowerChoiceOption(const std::string& optionName,
+                          const std::string& optionDescription,
+                          int optionLevel,
+                          int optionMaxLevel)
+            : name(optionName), description(optionDescription), level(optionLevel), maxLevel(optionMaxLevel) {}
+    };
+
     struct PopupNotification {
         std::string text;
         sf::Color color;
@@ -62,6 +75,10 @@ namespace gameplay_renderer {
         bool staircaseLockedTextureLoaded;
         bool staircaseUnlockedTextureLoaded;
         std::vector<PopupNotification> popupNotifications;
+        bool powerSelectionOpen;
+        int powerSelectionIndex;
+        int pendingPowerChoices;
+        std::vector<PowerChoiceOption> powerChoices;
         bool uiFontLoaded;
 
         GameLoopContext();
@@ -78,6 +95,7 @@ namespace gameplay_renderer {
     void drawStageDepthText(GameLoopContext& ctx);
     void updatePopupNotifications(GameLoopContext& ctx, float deltaSeconds);
     void drawPopupNotifications(GameLoopContext& ctx);
+    void drawPowerSelection(GameLoopContext& ctx);
     void updateEnemyListHover(GameLoopContext& ctx, int mouseX, int mouseY);
     void updateEnemyHoverFromGrid(GameLoopContext& ctx, int mouseX, int mouseY);
     void selectEnemyFromList(GameLoopContext& ctx, int mouseX, int mouseY);

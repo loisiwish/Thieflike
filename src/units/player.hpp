@@ -4,7 +4,7 @@
 
 class Player {
     public:
-        Player() : health(7 + (1 * 3)), position(0, 0), level(1), move_speed(1), base_attack(3), base_defense(1), base_range(1), endurance(1), skillPoints(0), experience(0), experienceToNextLevel(10), lifesteal(3) {}
+        Player() : health(7 + (1 * 3)), position(0, 0), level(1), move_speed(1), base_attack(3), base_defense(1), base_range(1), endurance(1), skillPoints(0), experience(0), experienceToNextLevel(10), lifesteal(0), thorns(0), poisonnedWeapon(0), sniper(0), telekinesis(0) {}
         ~Player() {}
 
         void setHealth(int h) {
@@ -64,6 +64,9 @@ class Player {
 
             return false;
         }
+        bool canAttackAtRange() const {
+            return hasRangedWeaponEquipped() || telekinesis > 0;
+        }
         int getLevel() const { return level; }
         int getMoveSpeed() const { return move_speed + inventory.getTotalMoveSpeedBonus(); }
         int getEndurance() const { return endurance; }
@@ -73,6 +76,64 @@ class Player {
         int getLifesteal()const { return lifesteal; };
         void setLifesteal(int lv) { lifesteal = lv; };
         void levelupLifesteal() { if (lifesteal < 3) lifesteal++; };
+
+        int getThorns() const { return thorns; }
+        int getPoisonnedWeapon() const { return poisonnedWeapon; }
+        int getSniper() const { return sniper; }
+        int getTelekinesis() const { return telekinesis; }
+
+        int getPowerLevelByName(const std::string& powerName) const {
+            if (powerName == "Lifesteal") {
+                return lifesteal;
+            }
+            if (powerName == "Telekinesis") {
+                return telekinesis;
+            }
+            if (powerName == "Thorns") {
+                return thorns;
+            }
+            if (powerName == "Poisonned Weapons") {
+                return poisonnedWeapon;
+            }
+            if (powerName == "Sniper") {
+                return sniper;
+            }
+            return 0;
+        }
+
+        bool canUpgradePower(const std::string& powerName) const {
+            return getPowerLevelByName(powerName) < 3;
+        }
+
+        bool applyPowerByName(const std::string& powerName) {
+            if (!canUpgradePower(powerName)) {
+                return false;
+            }
+
+            if (powerName == "Lifesteal") {
+                ++lifesteal;
+                return true;
+            }
+            if (powerName == "Telekinesis") {
+                ++telekinesis;
+                ++base_range;
+                return true;
+            }
+            if (powerName == "Thorns") {
+                ++thorns;
+                return true;
+            }
+            if (powerName == "Poisonned Weapons") {
+                ++poisonnedWeapon;
+                return true;
+            }
+            if (powerName == "Sniper") {
+                ++sniper;
+                return true;
+            }
+
+            return false;
+        }
 
 
         void setMoveSpeed(int speed) { move_speed = speed; }
@@ -146,5 +207,9 @@ class Player {
         int experienceToNextLevel;
 
         int lifesteal; //1 = 1hp per hit, 2 = half damage dealt, 3 = full damage dealt
+    int thorns;
+    int poisonnedWeapon;
+    int sniper;
+    int telekinesis;
 
 };

@@ -43,6 +43,8 @@ class AEnemy : public IEnemy {
               base_attack(1),
               base_defense(1),
               base_range(1),
+                            poisonDamagePerTurn(0),
+                            poisonTurnsRemaining(0),
               experienceMultiplier(1.0f),
               itemDropRate(0.0f),
               carriesStairKey(false) {}
@@ -63,6 +65,32 @@ class AEnemy : public IEnemy {
         void setAttack(int attack) override { base_attack = attack; }
         void setDefense(int defense) override { base_defense = defense; }
         void setRange(int range) override { base_range = range; }
+        void applyPoison(int damagePerTurn, int turns) {
+            if (damagePerTurn <= 0 || turns <= 0) {
+                return;
+            }
+            if (damagePerTurn > poisonDamagePerTurn) {
+                poisonDamagePerTurn = damagePerTurn;
+            }
+            if (turns > poisonTurnsRemaining) {
+                poisonTurnsRemaining = turns;
+            }
+        }
+        int tickPoison() {
+            if (poisonTurnsRemaining <= 0 || poisonDamagePerTurn <= 0) {
+                return 0;
+            }
+
+            --poisonTurnsRemaining;
+            takeDamage(poisonDamagePerTurn);
+            if (poisonTurnsRemaining == 0) {
+                poisonDamagePerTurn = 0;
+            }
+            return poisonDamagePerTurn;
+        }
+        bool hasActivePoison() const {
+            return poisonTurnsRemaining > 0 && poisonDamagePerTurn > 0;
+        }
         int dealDamage(Player& player) const override { 
             int damage = std::max(1, base_attack - player.getDefense());
             player.get_damaged(damage);
@@ -197,6 +225,8 @@ class AEnemy : public IEnemy {
         int base_attack;
         int base_defense;
         int base_range;
+        int poisonDamagePerTurn;
+        int poisonTurnsRemaining;
         std::string name;
         std::string description;
         float experienceMultiplier; // Multiplier for experience dropped, can be adjusted based on enemy type

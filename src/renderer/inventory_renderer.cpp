@@ -361,6 +361,29 @@ namespace gameplay_renderer {
             leftY += 24.f;
         }
 
+        leftY += 12.f;
+        sf::Text powersHeader("Powers", ctx.uiFont, 24);
+        powersHeader.setFillColor(sf::Color(255, 255, 255));
+        powersHeader.setPosition(contentX, leftY);
+        ctx.window->draw(powersHeader);
+        leftY += 34.f;
+
+        const std::string powerLines[] = {
+            "Lifesteal: " + std::to_string(player.getLifesteal()) + "/3",
+            "Telekinesis: " + std::to_string(player.getTelekinesis()) + "/3",
+            "Thorns: " + std::to_string(player.getThorns()) + "/3",
+            "Poisonned Weapons: " + std::to_string(player.getPoisonnedWeapon()) + "/3",
+            "Sniper: " + std::to_string(player.getSniper()) + "/3",
+        };
+
+        for (const std::string& line : powerLines) {
+            sf::Text powerLine(line, ctx.uiFont, 16);
+            powerLine.setFillColor(sf::Color(170, 220, 255));
+            powerLine.setPosition(contentX, leftY);
+            ctx.window->draw(powerLine);
+            leftY += 24.f;
+        }
+
         float rightX = contentX + (contentWidth * 0.52f);
         float rightY = contentY + 130.f;
 

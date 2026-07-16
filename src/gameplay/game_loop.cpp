@@ -30,6 +30,7 @@ void game_loop(Game& game) {
             gameplay_renderer::drawStageGrid(ctx);
             gameplay_renderer::drawEnemyList(ctx);
         }
+        gameplay_renderer::drawPowerSelection(ctx);
         gameplay_renderer::drawStageDepthText(ctx);
         gameplay_renderer::drawPopupNotifications(ctx);
         ctx.window->display();
