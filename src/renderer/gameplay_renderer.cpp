@@ -667,11 +667,6 @@ namespace gameplay_renderer {
         title.setPosition(60.f, 30.f);
         ctx.window->draw(title);
 
-        sf::Text hint("Use Left/Right (or 1-3), then Enter to confirm", ctx.uiFont, 20);
-        hint.setFillColor(sf::Color(180, 200, 220));
-        hint.setPosition(60.f, 84.f);
-        ctx.window->draw(hint);
-
         const float cardWidth = (static_cast<float>(windowSize.x) - 120.f - 40.f) / 3.f;
         const float cardHeight = std::max(220.f, static_cast<float>(windowSize.y) - 180.f);
         const float startX = 60.f;
