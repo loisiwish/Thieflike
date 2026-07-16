@@ -38,6 +38,7 @@ class Stage {
         bool hasLineOfSight(int fromX, int fromY, int toX, int toY) const;
         bool canRangedAttack(int fromX, int fromY, int toX, int toY, Player &player) const;
         bool movePlayerBy(int deltaX, int deltaY);
+        bool playerRangedAttack(int targetX, int targetY);
         void performEnemiesTurn();
         bool isStaircaseUnlocked() const { return staircaseUnlocked; }
 

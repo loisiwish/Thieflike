@@ -472,6 +472,23 @@ namespace gameplay_renderer {
                 if (event.key.code == sf::Keyboard::S && ctx.playerMovesRemaining > 0) {
                     playerAction = ctx.stage->movePlayerBy(0, 1);
                 }
+                if ((event.key.code == sf::Keyboard::Enter || event.key.code == sf::Keyboard::Space) &&
+                    ctx.playerMovesRemaining > 0 &&
+                    ctx.hasSelectedGrid &&
+                    ctx.stage->getPlayer().hasRangedWeaponEquipped()) {
+                    playerAction = ctx.stage->playerRangedAttack(ctx.selectedGridX, ctx.selectedGridY);
+                    if (playerAction) {
+                        const AEnemy* targetedEnemy = ctx.stage->getEnemyAt(ctx.selectedGridX, ctx.selectedGridY);
+                        if (targetedEnemy == nullptr) {
+                            ctx.selectedEnemyIndex = std::numeric_limits<std::size_t>::max();
+                            ctx.hoveredEnemyIndex = std::numeric_limits<std::size_t>::max();
+                        } else {
+                            const std::size_t selectedEnemyIndex = ctx.stage->getEnemyIndexAt(ctx.selectedGridX, ctx.selectedGridY);
+                            ctx.selectedEnemyIndex = selectedEnemyIndex;
+                            ctx.hoveredEnemyIndex = selectedEnemyIndex;
+                        }
+                    }
+                }
                 if (event.key.code == sf::Keyboard::Left) {
                     moveSelectedGridCell(ctx, -1, 0);
                 }

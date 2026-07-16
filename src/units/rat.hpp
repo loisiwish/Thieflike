@@ -15,7 +15,7 @@ class Rat: public AEnemy {
             setName("Rat");
             setDescription("A small, quick, and aggressive rodent. It can be a nuisance in large numbers, but is relatively weak on its own.");
             setExperienceMultiplier(1.0f);
-            setItemDropRate(0.2f);
+            setItemDropRate(0.5f);
         }
         ~Rat() {}
 };

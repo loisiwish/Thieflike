@@ -390,6 +390,46 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
     return true;
 }
 
+bool Stage::playerRangedAttack(int targetX, int targetY) {
+    const sf::Vector2i playerPos = player.getPosition();
+    if (!player.hasRangedWeaponEquipped()) {
+        return false;
+    }
+    if (!canRangedAttack(playerPos.x, playerPos.y, targetX, targetY, player)) {
+        return false;
+    }
+
+    const std::size_t enemyIndex = getEnemyIndexAt(targetX, targetY);
+    if (enemyIndex == enemies.size()) {
+        return false;
+    }
+
+    AEnemy& targetEnemy = enemies[enemyIndex];
+    const int damage = std::max(1, player.getAttack() - targetEnemy.getDefense());
+    targetEnemy.takeDamage(damage);
+
+    if (player.getLifesteal() == 1)
+        player.heal(1);
+
+    if (player.getLifesteal() == 2)
+        player.heal(damage / 2);
+
+    if (player.getLifesteal() == 3)
+        player.heal(damage);
+
+    if (targetEnemy.getHealth() <= 0) {
+        if (targetEnemy.getCarriesStairKey()) {
+            staircaseUnlocked = true;
+        }
+        targetEnemy.dropExperience(player);
+        targetEnemy.tryDropItem(player);
+        while (player.checkLevelUp()) {}
+        enemies.erase(enemies.begin() + static_cast<std::vector<AEnemy>::difference_type>(enemyIndex));
+    }
+
+    return true;
+}
+
 void Stage::performEnemiesTurn() {
     const auto isCellOccupiedByOtherEnemy = [&](int x, int y, std::size_t selfIndex) {
         for (std::size_t i = 0; i < enemies.size(); ++i) {

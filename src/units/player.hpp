@@ -4,7 +4,7 @@
 
 class Player {
     public:
-        Player() : health(7 + (1 * 3)), position(0, 0), level(1), move_speed(1), base_attack(3), base_defense(1), base_range(1), endurance(1), skillPoints(0), experience(0), experienceToNextLevel(10), lifesteal(0) {}
+        Player() : health(7 + (1 * 3)), position(0, 0), level(1), move_speed(1), base_attack(3), base_defense(1), base_range(1), endurance(1), skillPoints(0), experience(0), experienceToNextLevel(10), lifesteal(3) {}
         ~Player() {}
 
         void setHealth(int h) {
@@ -47,6 +47,23 @@ class Player {
         int getAttack() const { return base_attack + inventory.getTotalAttackBonus(); }
         int getDefense() const { return base_defense + inventory.getTotalDefenseBonus(); }
         int getRange() const { return base_range + inventory.getTotalRangeBonus(); }
+        bool hasRangedWeaponEquipped() const {
+            const Item* mainHand = inventory.getEquipped(Item::Slot::MainHand);
+            if (mainHand != nullptr &&
+                mainHand->getCategory() == Item::Category::Weapon &&
+                mainHand->getWeaponRange() == Item::WeaponRange::Ranged) {
+                return true;
+            }
+
+            const Item* offHand = inventory.getEquipped(Item::Slot::OffHand);
+            if (offHand != nullptr &&
+                offHand->getCategory() == Item::Category::Weapon &&
+                offHand->getWeaponRange() == Item::WeaponRange::Ranged) {
+                return true;
+            }
+
+            return false;
+        }
         int getLevel() const { return level; }
         int getMoveSpeed() const { return move_speed + inventory.getTotalMoveSpeedBonus(); }
         int getEndurance() const { return endurance; }
@@ -128,6 +145,6 @@ class Player {
         float experience;
         int experienceToNextLevel;
 
-        int lifesteal;
+        int lifesteal; //1 = 1hp per hit, 2 = half damage dealt, 3 = full damage dealt
 
 };
