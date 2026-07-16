@@ -4,7 +4,7 @@
 
 class Player {
     public:
-        Player() : health(7 + (1 * 3)), position(0, 0), level(1), move_speed(1), base_attack(3), base_defense(1), base_range(1), endurance(1), skillPoints(0), experience(0), experienceToNextLevel(10) {}
+        Player() : health(7 + (1 * 3)), position(0, 0), level(1), move_speed(1), base_attack(3), base_defense(1), base_range(1), endurance(1), skillPoints(0), experience(0), experienceToNextLevel(10), lifesteal(0) {}
         ~Player() {}
 
         void setHealth(int h) {
@@ -51,6 +51,13 @@ class Player {
         int getMoveSpeed() const { return move_speed + inventory.getTotalMoveSpeedBonus(); }
         int getEndurance() const { return endurance; }
         int getSkillPoints() const { return skillPoints; }
+
+
+        int getLifesteal()const { return lifesteal; };
+        void setLifesteal(int lv) { lifesteal = lv; };
+        void levelupLifesteal() { if (lifesteal < 3) lifesteal++; };
+
+
         void setMoveSpeed(int speed) { move_speed = speed; }
         void setLevel(int level) { this->level = level; }
         void setAttack(int attack) { base_attack = attack; }
@@ -106,6 +113,7 @@ class Player {
             return false;
         }
 
+
     private:
         int health;
         sf::Vector2i position;
@@ -119,4 +127,7 @@ class Player {
         int skillPoints;
         float experience;
         int experienceToNextLevel;
+
+        int lifesteal;
+
 };

@@ -5,8 +5,6 @@
 #include <random>
 #include <string>
 
-#include <iostream> //TEMP
-
 #include "player.hpp"
 
 class IEnemy {

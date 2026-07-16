@@ -459,7 +459,7 @@ namespace gameplay_renderer {
                 }
                 const int depthBeforeAction = ctx.stage->getDepth();
                 const int levelBeforeAction = ctx.stage->getPlayer().getLevel();
-                const std::vector<Item> backpackBeforeAction = ctx.stage->getPlayer().getInventory().getBackpackItems();
+                const int backpackItemsBeforeAction = ctx.stage->getPlayer().getInventory().getBackpackTotalItemCount();
                 if (event.key.code == sf::Keyboard::Q && ctx.playerMovesRemaining > 0) {
                     playerAction = ctx.stage->movePlayerBy(-1, 0);
                 }
@@ -499,12 +499,14 @@ namespace gameplay_renderer {
                         }
                     }
 
-                    const std::vector<Item>& backpackAfterAction = player.getInventory().getBackpackItems();
-                    if (backpackAfterAction.size() > backpackBeforeAction.size()) {
-                        for (std::size_t i = backpackBeforeAction.size(); i < backpackAfterAction.size(); ++i) {
+                    const int backpackItemsAfterAction = player.getInventory().getBackpackTotalItemCount();
+                    if (backpackItemsAfterAction > backpackItemsBeforeAction) {
+                        const std::vector<Inventory::BackpackEntry>& backpackAfterAction = player.getInventory().getBackpackItems();
+                        if (!backpackAfterAction.empty()) {
+                            const Inventory::BackpackEntry& latestEntry = backpackAfterAction.back();
                             pushPopupNotification(ctx,
-                                                  "New Item: " + backpackAfterAction[i].getName(),
-                                                  getItemRarityColor(backpackAfterAction[i].getRarity()));
+                                                  "New Item: " + latestEntry.item.getName(),
+                                                  getItemRarityColor(latestEntry.item.getRarity()));
                         }
                     }
 

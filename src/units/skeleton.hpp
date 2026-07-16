@@ -6,9 +6,9 @@
 class Skeleton: public AEnemy {
     public:
         Skeleton() : AEnemy() {
-            
+            setHealth(3);
             setAttack(4);
-            setDefense(2);
+            setDefense(0);
             setRange(2);
             setLevel(3);
             setMoveSpeed(1);

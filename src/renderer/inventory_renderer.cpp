@@ -112,7 +112,7 @@ namespace gameplay_renderer {
                 return;
             }
 
-            const std::vector<Item>& backpack = ctx.stage->getPlayer().getInventory().getBackpackItems();
+            const std::vector<Inventory::BackpackEntry>& backpack = ctx.stage->getPlayer().getInventory().getBackpackItems();
             if (backpack.empty()) {
                 ctx.inventorySelectedBackpackIndex = -1;
             } else {
@@ -196,9 +196,9 @@ namespace gameplay_renderer {
                 if (ctx.inventorySelectingBackpack) {
                     if (ctx.inventorySelectedBackpackIndex >= 0) {
                         const std::size_t selectedIdx = static_cast<std::size_t>(ctx.inventorySelectedBackpackIndex);
-                        const std::vector<Item>& backpackItems = inventory.getBackpackItems();
+                        const std::vector<Inventory::BackpackEntry>& backpackItems = inventory.getBackpackItems();
                         if (selectedIdx < backpackItems.size() &&
-                            backpackItems[selectedIdx].getCategory() == Item::Category::Consumable) {
+                            backpackItems[selectedIdx].item.getCategory() == Item::Category::Consumable) {
                             const int healAmt = inventory.consumeFromBackpack(selectedIdx);
                             if (healAmt > 0) {
                                 player.heal(healAmt);
@@ -212,6 +212,15 @@ namespace gameplay_renderer {
                     const Item::Slot slot = equipmentSlots()[ctx.inventorySelectedEquippedIndex];
                     inventory.unequip(slot);
                     clampInventorySelection(ctx);
+                }
+            }
+            if (keyCode == sf::Keyboard::BackSpace) {
+                if (ctx.inventorySelectingBackpack) {
+                    if (ctx.inventorySelectedBackpackIndex >= 0) {
+                        const std::size_t selectedIdx = static_cast<std::size_t>(ctx.inventorySelectedBackpackIndex);
+                        inventory.dropFromBackpack(selectedIdx);
+                        clampInventorySelection(ctx);
+                    }
                 }
             }
         }
@@ -266,7 +275,7 @@ namespace gameplay_renderer {
         title.setPosition(contentX, contentY);
         ctx.window->draw(title);
 
-        sf::Text hint("Tab/I: close | Left/Right: panel | Up/Down: select | Enter: equip/unequip/use | 1-3: spend skill point", ctx.uiFont, 18);
+        sf::Text hint("Tab/I: close | Left/Right: panel | Up/Down: select | Enter: equip/unequip/use | 1-3: spend skill point | backspace: drop item", ctx.uiFont, 18);
         hint.setFillColor(sf::Color(180, 180, 180));
         hint.setPosition(contentX, contentY + 46.f);
         ctx.window->draw(hint);
@@ -355,13 +364,13 @@ namespace gameplay_renderer {
         float rightX = contentX + (contentWidth * 0.52f);
         float rightY = contentY + 130.f;
 
-        sf::Text backpackHeader("Backpack", ctx.uiFont, 28);
+        sf::Text backpackHeader("Backpack (" + std::to_string(inventory.getBackpackSlotCount()) + "/" + std::to_string(Inventory::MaxBackpackSlots) + ")", ctx.uiFont, 28);
         backpackHeader.setFillColor(sf::Color(255, 255, 255));
         backpackHeader.setPosition(rightX, rightY);
         ctx.window->draw(backpackHeader);
         rightY += 38.f;
 
-        const std::vector<Item>& backpack = inventory.getBackpackItems();
+        const std::vector<Inventory::BackpackEntry>& backpack = inventory.getBackpackItems();
         if (backpack.empty()) {
             sf::Text emptyLine("(empty)", ctx.uiFont, 18);
             emptyLine.setFillColor(ctx.inventorySelectingBackpack ? sf::Color(255, 220, 120) : sf::Color(180, 180, 180));
@@ -369,7 +378,10 @@ namespace gameplay_renderer {
             ctx.window->draw(emptyLine);
         } else {
             for (std::size_t i = 0; i < backpack.size(); ++i) {
-                const std::string line = std::to_string(i + 1) + ". " + itemSummary(backpack[i]);
+                std::string line = std::to_string(i + 1) + ". " + itemSummary(backpack[i].item);
+                if (backpack[i].quantity > 1) {
+                    line += " x" + std::to_string(backpack[i].quantity);
+                }
                 sf::Text entry(wrapTextToWidth(line, ctx.uiFont, 16, contentWidth * 0.48f), ctx.uiFont, 16);
                 const bool isSelected = ctx.inventorySelectingBackpack &&
                                         ctx.inventorySelectedBackpackIndex == static_cast<int>(i);
@@ -379,7 +391,7 @@ namespace gameplay_renderer {
                     highlight.setFillColor(sf::Color(255, 220, 120, 45));
                     ctx.window->draw(highlight);
                 }
-                entry.setFillColor(getItemRarityColor(backpack[i].getRarity()));
+                entry.setFillColor(getItemRarityColor(backpack[i].item.getRarity()));
                 entry.setPosition(rightX, rightY);
                 ctx.window->draw(entry);
                 rightY += 24.f;

@@ -9,21 +9,64 @@
 
 class Inventory {
     public:
+        struct BackpackEntry {
+            Item item;
+            int quantity;
+
+            BackpackEntry(const Item& backpackItem, int count)
+                : item(backpackItem), quantity(count) {}
+        };
+
         Inventory() {}
         ~Inventory() {}
+
+        static constexpr std::size_t MaxBackpackSlots = 30;
 
         // Legacy API: keeps older code working while using typed items internally.
         void addItem(const std::string& itemName) {
             addItem(Item::createJewelry(itemName));
         }
 
-        void addItem(const Item& item) {
-            backpack.push_back(item);
+        bool addItem(const Item& item) {
+            if (item.getCategory() == Item::Category::Consumable) {
+                for (BackpackEntry& entry : backpack) {
+                    if (entry.item.getCategory() != Item::Category::Consumable) {
+                        continue;
+                    }
+                    if (entry.item.getName() != item.getName()) {
+                        continue;
+                    }
+                    if (entry.item.getRarity() != item.getRarity()) {
+                        continue;
+                    }
+                    if (entry.item.getHealAmount() != item.getHealAmount()) {
+                        continue;
+                    }
+                    ++entry.quantity;
+                    syncLegacyItems();
+                    return true;
+                }
+            }
+
+            if (backpack.size() >= MaxBackpackSlots) {
+                return false;
+            }
+
+            backpack.emplace_back(item, 1);
             syncLegacyItems();
+            return true;
         }
 
         const std::vector<std::string>& getItems() const { return legacyItems; }
-        const std::vector<Item>& getBackpackItems() const { return backpack; }
+        const std::vector<BackpackEntry>& getBackpackItems() const { return backpack; }
+        std::size_t getBackpackSlotCount() const { return backpack.size(); }
+        int getBackpackTotalItemCount() const {
+            int total = 0;
+            for (const BackpackEntry& entry : backpack) {
+                total += entry.quantity;
+            }
+            return total;
+        }
 
         bool equip(const Item& item, Item::Slot requestedSlot = Item::Slot::Auto) {
             if (item.getCategory() == Item::Category::None) {
@@ -56,14 +99,22 @@ class Inventory {
             if (index >= backpack.size()) {
                 return 0;
             }
-            const Item& item = backpack[index];
+            const Item& item = backpack[index].item;
             if (item.getCategory() != Item::Category::Consumable) {
                 return 0;
             }
             const int heal = item.getHealAmount();
-            backpack.erase(backpack.begin() + static_cast<std::vector<Item>::difference_type>(index));
+            removeBackpackQuantity(index, 1);
             syncLegacyItems();
             return heal;
+        }
+
+        void dropFromBackpack(std::size_t index) {
+            if (index >= backpack.size()) {
+                return;
+            }
+            removeBackpackQuantity(index, 1);
+            syncLegacyItems();
         }
 
         bool equipFromBackpack(std::size_t index, Item::Slot requestedSlot = Item::Slot::Auto) {
@@ -71,12 +122,12 @@ class Inventory {
                 return false;
             }
 
-            const Item item = backpack[index];
+            const Item item = backpack[index].item;
             if (!equip(item, requestedSlot)) {
                 return false;
             }
 
-            backpack.erase(backpack.begin() + static_cast<std::vector<Item>::difference_type>(index));
+            removeBackpackQuantity(index, 1);
             syncLegacyItems();
             return true;
         }
@@ -87,9 +138,10 @@ class Inventory {
                 return false;
             }
 
-            backpack.push_back(equipped->value());
+            if (!addItem(equipped->value())) {
+                return false;
+            }
             equipped->reset();
-            syncLegacyItems();
             return true;
         }
 
@@ -109,7 +161,7 @@ class Inventory {
         int getTotalMoveSpeedBonus() const { return sumBonus(&Item::getMoveSpeedBonus); }
 
     private:
-        std::vector<Item> backpack;
+        std::vector<BackpackEntry> backpack;
         std::vector<std::string> legacyItems;
 
         std::optional<Item> headpiece;
@@ -148,9 +200,23 @@ class Inventory {
 
         void syncLegacyItems() {
             legacyItems.clear();
-            legacyItems.reserve(backpack.size());
-            for (const Item& item : backpack) {
-                legacyItems.push_back(item.getName());
+            for (const BackpackEntry& entry : backpack) {
+                if (entry.quantity <= 1) {
+                    legacyItems.push_back(entry.item.getName());
+                } else {
+                    legacyItems.push_back(entry.item.getName() + " x" + std::to_string(entry.quantity));
+                }
+            }
+        }
+
+        void removeBackpackQuantity(std::size_t index, int amount) {
+            if (index >= backpack.size() || amount <= 0) {
+                return;
+            }
+
+            backpack[index].quantity -= amount;
+            if (backpack[index].quantity <= 0) {
+                backpack.erase(backpack.begin() + static_cast<std::vector<BackpackEntry>::difference_type>(index));
             }
         }
 
@@ -165,8 +231,7 @@ class Inventory {
                 return false;
             }
 
-            replaceSlot(target, item);
-            return true;
+            return replaceSlot(target, item);
         }
 
         bool equipJewelry(const Item& item, Item::Slot requestedSlot) {
@@ -174,8 +239,7 @@ class Inventory {
                 return false;
             }
 
-            replaceSlot(jewelry, item);
-            return true;
+            return replaceSlot(jewelry, item);
         }
 
         bool equipWeapon(const Item& item, Item::Slot requestedSlot) {
@@ -185,25 +249,24 @@ class Inventory {
                 }
 
                 if (offHand.has_value()) {
-                    backpack.push_back(offHand.value());
+                    if (!canStoreInBackpack(offHand.value())) {
+                        return false;
+                    }
+                    addItem(offHand.value());
                     offHand.reset();
-                    syncLegacyItems();
                 }
-                replaceSlot(mainHand, item);
-                return true;
+                return replaceSlot(mainHand, item);
             }
 
             if (requestedSlot == Item::Slot::MainHand) {
-                replaceSlot(mainHand, item);
-                return true;
+                return replaceSlot(mainHand, item);
             }
 
             if (requestedSlot == Item::Slot::OffHand) {
                 if (mainHand.has_value() && mainHand->isTwoHandedWeapon()) {
                     return false;
                 }
-                replaceSlot(offHand, item);
-                return true;
+                return replaceSlot(offHand, item);
             }
 
             if (requestedSlot != Item::Slot::Auto) {
@@ -220,16 +283,34 @@ class Inventory {
                 return true;
             }
 
-            replaceSlot(mainHand, item);
+            return replaceSlot(mainHand, item);
+        }
+
+        bool replaceSlot(std::optional<Item>& target, const Item& replacement) {
+            if (target.has_value()) {
+                if (!canStoreInBackpack(target.value())) {
+                    return false;
+                }
+                addItem(target.value());
+            }
+            target = replacement;
             return true;
         }
 
-        void replaceSlot(std::optional<Item>& target, const Item& replacement) {
-            if (target.has_value()) {
-                backpack.push_back(target.value());
-                syncLegacyItems();
+        bool canStoreInBackpack(const Item& item) const {
+            if (item.getCategory() == Item::Category::Consumable) {
+                for (const BackpackEntry& entry : backpack) {
+                    if (entry.item.getCategory() != Item::Category::Consumable) {
+                        continue;
+                    }
+                    if (entry.item.getName() == item.getName() &&
+                        entry.item.getRarity() == item.getRarity() &&
+                        entry.item.getHealAmount() == item.getHealAmount()) {
+                        return true;
+                    }
+                }
             }
-            target = replacement;
+            return backpack.size() < MaxBackpackSlots;
         }
 
         std::optional<Item>* getSlotReference(Item::Slot slot) {

@@ -353,6 +353,15 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
         const int damage = std::max(1, player.getAttack() - targetEnemy.getDefense());
         targetEnemy.takeDamage(damage);
 
+        if (player.getLifesteal() == 1)
+            player.heal(1);
+
+        if (player.getLifesteal() == 2)
+            player.heal(damage / 2);
+
+        if (player.getLifesteal() == 3)
+            player.heal(damage);
+
         if (targetEnemy.getHealth() <= 0) {
             if (targetEnemy.getCarriesStairKey()) {
                 staircaseUnlocked = true;
