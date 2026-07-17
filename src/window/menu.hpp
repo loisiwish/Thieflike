@@ -8,6 +8,7 @@
 
 bool init_Menu(Game& game);
 void show_Menu(Game& game);
+void show_Options(Game& game);
 void menu_SelectNext();
 void menu_SelectPrevious();
 void menu_SelectHovered(Game& game, int mouseX, int mouseY);

@@ -23,6 +23,7 @@ namespace {
                 game.changeState(1);
                 return 0;
             case 1: // Options
+                game.changeState(2);
                 return 0;
             case 2: // Exit
                 game.getWindow().getWindow()->close();
@@ -141,10 +142,20 @@ void menu_SelectHovered(Game& game, int mouseX, int mouseY) {
 int get_Events_Menu(Game& game, sf::Keyboard::Key& keyPressed) {
     sf::Event event;
     while (game.getWindow().getWindow()->pollEvent(event)) {
-        if (event.type == sf::Event::Closed || (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape)) {
+        if (event.type == sf::Event::Closed) {
             game.getWindow().getWindow()->close();
             return -1; // Indicate that the window was closed
         }
+
+        if (event.type == sf::Event::KeyPressed && event.key.code == sf::Keyboard::Escape) {
+            if (game.getState() == 2) {
+                game.changeState(0);
+                return 0;
+            }
+            game.getWindow().getWindow()->close();
+            return -1;
+        }
+
         if (event.type == sf::Event::KeyPressed) {
             keyPressed = event.key.code;
             switch (event.key.code) {
@@ -199,6 +210,27 @@ void show_Menu(Game& game) {
         for (std::size_t i = 0; i < g_menuUi.buttons.size(); ++i) {
             g_menuUi.buttons[i].draw(*window);
         }
+    }
+
+    window->display();
+}
+
+void show_Options(Game& game) {
+    sf::RenderWindow* window = game.getWindow().getWindow();
+    window->clear(sf::Color(12, 14, 20));
+
+    if (init_Menu(game)) {
+        sf::Text title("Options", g_menuUi.font, 56);
+        centerTextX(title, 140.f, window->getSize());
+        title.setFillColor(sf::Color(240, 240, 240));
+        window->draw(title);
+
+        sf::Text hint("Available later", g_menuUi.font, 28);
+        hint.setFillColor(sf::Color(170, 180, 200));
+        const sf::FloatRect bounds = hint.getLocalBounds();
+        hint.setOrigin(bounds.left + (bounds.width / 2.f), bounds.top);
+        hint.setPosition(static_cast<float>(window->getSize().x) / 2.f, 300.f);
+        window->draw(hint);
     }
 
     window->display();

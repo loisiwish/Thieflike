@@ -20,7 +20,9 @@ int menu_loop(Game& game) {
                 game_loop(game);
                 break;
             case 2: // Paused state
-                // Render paused screen
+                // Render options screen
+                show_Options(game);
+                get_Events_Menu(game, keyPressed);
                 break;
             default:
                 break;
