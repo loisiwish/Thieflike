@@ -13,7 +13,7 @@ class Goblin: public AEnemy {
             setMoveSpeed(1);
             setName("Goblin");
             setDescription("A small, green-skinned humanoid creature.");
-            setExperienceMultiplier(1.0f);
+            setExperienceMultiplier(1.1f);
             setItemDropRate(0.25f);
         }
         ~Goblin() {}

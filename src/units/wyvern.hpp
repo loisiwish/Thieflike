@@ -8,14 +8,14 @@ class Wyvern: public AEnemy {
         Wyvern() : AEnemy () {
 
             setHealth(50);
-            setAttack(10);
+            setAttack(20);
             setDefense(10);
             setRange(1);
             setLevel(13);
             setMoveSpeed(2);
             setName("Wyvern");
             setDescription("A distant cousin to the mythical dragons");
-            setExperienceMultiplier(3.5);
+            setExperienceMultiplier(2.5);
             setItemDropRate(0.7);
         }
 

@@ -35,19 +35,19 @@ class IEnemy {
 
 class AEnemy : public IEnemy {
     public:
-        AEnemy()
-            : health(10),
-              position(0, 0),
-              level(1),
-              move_speed(1),
-              base_attack(1),
-              base_defense(1),
-              base_range(1),
-                            poisonDamagePerTurn(0),
-                            poisonTurnsRemaining(0),
-              experienceMultiplier(1.0f),
-              itemDropRate(0.0f),
-              carriesStairKey(false) {}
+        AEnemy() : 
+            health(10),
+            position(0, 0),
+            level(1),
+            move_speed(1),
+            base_attack(1),
+            base_defense(1),
+            base_range(1),
+            poisonDamagePerTurn(0),
+            poisonTurnsRemaining(0),
+            experienceMultiplier(1.0f),
+            itemDropRate(0.0f),
+            carriesStairKey(false) {}
         ~AEnemy() {}
 
         void takeDamage(int damage) override { health -= damage; }
@@ -101,7 +101,7 @@ class AEnemy : public IEnemy {
         std::string getDescription() const override { return description; }
         void setName(const std::string& n) { name = n; }
         void setDescription(const std::string& d) { description = d; }
-        float dropExperience(Player& player) const override { float exp = static_cast<float>(level) * 5.0f * experienceMultiplier; player.addExperience(exp); return exp; }
+        float dropExperience(Player& player) const override { float exp = 5 * experienceMultiplier; player.addExperience(exp); return exp; }
         bool tryDropItem(Player& player) const override {
             if (itemDropRate <= 0.f) {
                 return false;
@@ -118,11 +118,11 @@ class AEnemy : public IEnemy {
             const float rarityValue = rarityRoll(rng);
 
             Item::Rarity rarity = Item::Rarity::Common;
-            if (effectiveLevel >= 18 && rarityValue < 0.02f) {
+            if (effectiveLevel >= 18 && rarityValue < 0.05f) {
                 rarity = Item::Rarity::Mythic;
-            } else if (effectiveLevel >= 12 && rarityValue < 0.08f) {
+            } else if (effectiveLevel >= 12 && rarityValue < 0.1f) {
                 rarity = Item::Rarity::Legendary;
-            } else if (effectiveLevel >= 8 && rarityValue < 0.18f) {
+            } else if (effectiveLevel >= 8 && rarityValue < 0.2f) {
                 rarity = Item::Rarity::Epic;
             } else if (effectiveLevel >= 4 && rarityValue < 0.35f) {
                 rarity = Item::Rarity::Rare;
@@ -200,7 +200,7 @@ class AEnemy : public IEnemy {
             } else if (category == 3) {
                 droppedItem = Item::createGauntlets("Gauntlets", attackBonus, defenseBonus / 2, 0, 0, 0, rarity);
             } else if (category == 4) {
-                droppedItem = Item::createLegsArmor("Leggings", 0, defenseBonus / 2, 0, healthBonus, 0, rarity);
+                droppedItem = Item::createLegsArmor("Leggings", 0, defenseBonus / 2, 0, healthBonus + 2, 0, rarity);
             } else if (category == 5) {
                 droppedItem = Item::createBoots("Boots", 0, defenseBonus, 0, 0, std::max(1, moveSpeedBonus / 2), rarity);
             } else {

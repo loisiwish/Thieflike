@@ -7,8 +7,8 @@ class Dragon: public AEnemy {
     public:
         Dragon() : AEnemy() {
             setHealth(100);
-            setAttack(50);
-            setDefense(40);
+            setAttack(60);
+            setDefense(30);
             setRange(3);
             setLevel(20);
             setMoveSpeed(2);

@@ -129,11 +129,11 @@ void Stage::regenerateForDepth() {
     const int enemyCount = std::min(targetEnemyCount, maxEnemyCount);
 
     auto createEnemyForDepth = [&]() {
-        const int ratWeight = std::max(5, 10 - stageDepth);
-        const int goblinWeight = std::min(8, stageDepth);
-        const int skeletonWeight = std::min(12, stageDepth - 1);
-        const int trollWeight = stageDepth >= 3 ? (stageDepth - 2) : 0;
-        const int ogreWeight = stageDepth >= 5 ? (stageDepth - 3) : 0;
+        const int ratWeight = std::max(3, 10 - stageDepth);
+        const int goblinWeight = std::min(8, stageDepth - 1);
+        const int skeletonWeight = std::min(12, stageDepth - 2);
+        const int trollWeight = stageDepth >= 4 ? (stageDepth - 3) : 0;
+        const int ogreWeight = stageDepth >= 6 ? (stageDepth - 4) : 0;
         const int basiliskWeight = stageDepth >= 8 ? (stageDepth - 5) : 0;
         const int wyvernWeight = stageDepth >= 11 ? (stageDepth - 8) : 0;
         const int dragonWeight = stageDepth >= 15 ? (stageDepth - 14) : 0;
@@ -599,11 +599,11 @@ void Stage::performEnemiesTurn() {
                 if (dealt > 0 && player.getThorns() > 0) {
                     int reflectDamage = 0;
                     if (player.getThorns() == 1) {
-                        reflectDamage = std::max(1, player.getDefense() / 2);
+                        reflectDamage = std::max(1, player.getDefense() / 2 - enemy.getDefense());
                     } else if (player.getThorns() == 2) {
-                        reflectDamage = std::max(1, player.getDefense());
+                        reflectDamage = std::max(1, player.getDefense() - enemy.getDefense());
                     } else {
-                        reflectDamage = std::max(1, player.getDefense() * 2);
+                        reflectDamage = std::max(1, (player.getDefense() * 2) - enemy.getDefense());
                     }
 
                     enemy.takeDamage(reflectDamage);

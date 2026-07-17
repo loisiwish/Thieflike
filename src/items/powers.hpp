@@ -74,7 +74,7 @@ class Power_PoisonnedWeapon: public APower {
         Power_PoisonnedWeapon() 
         { 
             setName("Poisonned Weapons");
-            setDescription("Damaging an enemy inflicts poison, inflicting  1 / 3 / 10 damage to them on each of their turn for 2 / 3 / 5 turns (depending on level).");
+            setDescription("Damaging an enemy inflicts poison, inflicting  1 / 3 / 10 true damage to them on each of their turn for 2 / 3 / 5 turns (depending on level).");
             setLevel(0);
             setMaxLevel(3);
         };
