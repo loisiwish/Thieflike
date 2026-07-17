@@ -95,6 +95,8 @@ namespace gameplay_renderer {
     void drawStageDepthText(GameLoopContext& ctx);
     void updatePopupNotifications(GameLoopContext& ctx, float deltaSeconds);
     void drawPopupNotifications(GameLoopContext& ctx);
+    bool handlePowerSelectionKey(GameLoopContext& ctx, sf::Keyboard::Key key);
+    void openPowerSelection(GameLoopContext& ctx);
     void drawPowerSelection(GameLoopContext& ctx);
     void updateEnemyListHover(GameLoopContext& ctx, int mouseX, int mouseY);
     void updateEnemyHoverFromGrid(GameLoopContext& ctx, int mouseX, int mouseY);
