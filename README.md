@@ -12,7 +12,7 @@ Then, use the command "./rogue" to start the game.
 
 Controls:
 
-z-q-s-d to move
+z-q-s-d to move.
 Moving on a tile occupied by an enemy will attack them.
 For range attacks, use the arrow keys to select a tile, and if it is within range, press enter to damage the enemy.
 Killing an enemy will give you exp and has a chance of dropping an item (gear or health potion).
