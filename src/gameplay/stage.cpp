@@ -379,7 +379,7 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
         const int separation = std::max(std::abs(targetX - currentPos.x), std::abs(targetY - currentPos.y));
         const int sniperBonus = player.getSniper() * separation;
         const int damage = std::max(1, player.getAttack() + sniperBonus - targetEnemy.getDefense());
-        targetEnemy.takeDamage(damage);
+        targetEnemy.takeDamage(damage, player);
 
         if (player.getPoisonnedWeapon() > 0) {
             int poisonDamage = 0;
@@ -396,15 +396,6 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
             }
             targetEnemy.applyPoison(poisonDamage, poisonTurns);
         }
-
-        if (player.getLifesteal() == 1)
-            player.heal(1);
-
-        if (player.getLifesteal() == 2)
-            player.heal(damage / 2);
-
-        if (player.getLifesteal() == 3)
-            player.heal(damage);
 
         if (targetEnemy.getHealth() <= 0) {
             handleEnemyDeath(enemyIndex, true);
@@ -443,7 +434,7 @@ bool Stage::playerRangedAttack(int targetX, int targetY) {
     const int separation = std::max(std::abs(targetX - playerPos.x), std::abs(targetY - playerPos.y));
     const int sniperBonus = player.getSniper() * separation;
     const int damage = std::max(1, player.getAttack() + sniperBonus - targetEnemy.getDefense());
-    targetEnemy.takeDamage(damage);
+    targetEnemy.takeDamage(damage, player);
 
     if (player.getPoisonnedWeapon() > 0) {
         int poisonDamage = 0;
@@ -460,15 +451,6 @@ bool Stage::playerRangedAttack(int targetX, int targetY) {
         }
         targetEnemy.applyPoison(poisonDamage, poisonTurns);
     }
-
-    if (player.getLifesteal() == 1)
-        player.heal(1);
-
-    if (player.getLifesteal() == 2)
-        player.heal(damage / 2);
-
-    if (player.getLifesteal() == 3)
-        player.heal(damage);
 
     if (targetEnemy.getHealth() <= 0) {
         if (targetEnemy.getCarriesStairKey()) {
@@ -584,7 +566,7 @@ void Stage::performEnemiesTurn() {
         AEnemy& enemy = enemies[index];
 
         if (enemy.hasActivePoison()) {
-            enemy.tickPoison();
+            enemy.tickPoison(player);
             if (enemy.getHealth() <= 0) {
                 handleEnemyDeath(index);
                 continue;
@@ -614,7 +596,7 @@ void Stage::performEnemiesTurn() {
                         reflectDamage = std::max(1, (player.getDefense() * 2) - enemy.getDefense());
                     }
 
-                    enemy.takeDamage(reflectDamage);
+                    enemy.takeDamage(reflectDamage, player);
                     if (enemy.getHealth() <= 0) {
                         handleEnemyDeath(index);
                         enemyRemoved = true;
@@ -647,7 +629,7 @@ void Stage::performEnemiesTurn() {
                         reflectDamage = std::max(1, player.getDefense() * 2);
                     }
 
-                    enemy.takeDamage(reflectDamage);
+                    enemy.takeDamage(reflectDamage, player);
                     if (enemy.getHealth() <= 0) {
                         handleEnemyDeath(index);
                         enemyRemoved = true;

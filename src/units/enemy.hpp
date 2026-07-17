@@ -12,7 +12,7 @@ class IEnemy {
         virtual std::string getName() const = 0;
         virtual std::string getDescription() const = 0;
         virtual ~IEnemy() {}
-        virtual void takeDamage(int damage) = 0;
+        virtual void takeDamage(int damage, Player &player) = 0;
         virtual int getHealth() const = 0;
         virtual void setPosition(int x, int y) = 0;
         virtual void move(int dx, int dy) = 0;
@@ -50,7 +50,17 @@ class AEnemy : public IEnemy {
             carriesStairKey(false) {}
         ~AEnemy() {}
 
-        void takeDamage(int damage) override { health -= damage; }
+        void takeDamage(int damage, Player &player) override { 
+            health -= damage; 
+            if (player.getLifesteal() == 1)
+                player.heal(1);
+
+            if (player.getLifesteal() == 2)
+                player.heal(damage / 2);
+
+            if (player.getLifesteal() == 3)
+                player.heal(damage);
+        }
         int getHealth() const override { return health; }
         void setHealth(int hp) override { health = hp; }
         void setPosition(int x, int y) override { position = sf::Vector2i(x, y); }
@@ -76,13 +86,13 @@ class AEnemy : public IEnemy {
                 poisonTurnsRemaining = turns;
             }
         }
-        int tickPoison() {
+        int tickPoison(Player &player) {
             if (poisonTurnsRemaining <= 0 || poisonDamagePerTurn <= 0) {
                 return 0;
             }
 
             --poisonTurnsRemaining;
-            takeDamage(poisonDamagePerTurn);
+            takeDamage(poisonDamagePerTurn, player);
             if (poisonTurnsRemaining == 0) {
                 poisonDamagePerTurn = 0;
             }
