@@ -52,5 +52,6 @@ class Stage {
         std::vector<std::vector<TileType>> map; // 2D representation of the stage
 
         void regenerateForDepth();
+        int resolvePlayerLevelUps();
 };
  

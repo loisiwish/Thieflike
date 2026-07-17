@@ -559,6 +559,21 @@ namespace gameplay_renderer {
                 const int depthBeforeAction = ctx.stage->getDepth();
                 const int levelBeforeAction = ctx.stage->getPlayer().getLevel();
                 const int backpackItemsBeforeAction = ctx.stage->getPlayer().getInventory().getBackpackTotalItemCount();
+                auto queueLevelUpSelection = [&](int previousLevel) {
+                    const Player& levelPlayer = ctx.stage->getPlayer();
+                    if (levelPlayer.getLevel() <= previousLevel) {
+                        return;
+                    }
+
+                    for (int level = previousLevel + 1; level <= levelPlayer.getLevel(); ++level) {
+                        pushPopupNotification(ctx, "Level Up: " + std::to_string(level), sf::Color(255, 215, 120));
+                    }
+
+                    ctx.pendingPowerChoices += levelPlayer.getLevel() - previousLevel;
+                    if (!ctx.powerSelectionOpen && ctx.pendingPowerChoices > 0) {
+                        openPowerSelection(ctx);
+                    }
+                };
                 if (event.key.code == sf::Keyboard::Q && ctx.playerMovesRemaining > 0) {
                     playerAction = ctx.stage->movePlayerBy(-1, 0);
                 }
@@ -609,16 +624,7 @@ namespace gameplay_renderer {
                 if (playerAction) {
                     --ctx.playerMovesRemaining;
                     const Player& player = ctx.stage->getPlayer();
-                    if (player.getLevel() > levelBeforeAction) {
-                        for (int level = levelBeforeAction + 1; level <= player.getLevel(); ++level) {
-                            pushPopupNotification(ctx, "Level Up: " + std::to_string(level), sf::Color(255, 215, 120));
-                        }
-
-                        ctx.pendingPowerChoices += player.getLevel() - levelBeforeAction;
-                        if (!ctx.powerSelectionOpen && ctx.pendingPowerChoices > 0) {
-                            openPowerSelection(ctx);
-                        }
-                    }
+                    queueLevelUpSelection(levelBeforeAction);
 
                     const int backpackItemsAfterAction = player.getInventory().getBackpackTotalItemCount();
                     if (backpackItemsAfterAction > backpackItemsBeforeAction) {
@@ -632,7 +638,9 @@ namespace gameplay_renderer {
                     }
 
                     if (ctx.stage->getDepth() == depthBeforeAction && ctx.playerMovesRemaining <= 0) {
+                        const int levelBeforeEnemyTurn = ctx.stage->getPlayer().getLevel();
                         ctx.stage->performEnemiesTurn();
+                        queueLevelUpSelection(levelBeforeEnemyTurn);
                         ctx.playerMovesRemaining = std::max(1, ctx.stage->getPlayer().getMoveSpeed());
                     }
                 }

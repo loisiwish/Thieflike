@@ -27,6 +27,14 @@ void Stage::advanceDepth() {
     regenerateForDepth();
 }
 
+int Stage::resolvePlayerLevelUps() {
+    int levelUps = 0;
+    while (player.checkLevelUp()) {
+        ++levelUps;
+    }
+    return levelUps;
+}
+
 void Stage::regenerateForDepth() {
     map.resize(stageHeight, std::vector<TileType>(stageWidth, Grass));
     for (int y = 0; y < stageHeight; ++y) {
@@ -358,7 +366,7 @@ bool Stage::movePlayerBy(int deltaX, int deltaY) {
         }
         targetEnemy.dropExperience(player);
         targetEnemy.tryDropItem(player);
-        while (player.checkLevelUp()) {}
+        resolvePlayerLevelUps();
         enemies.erase(enemies.begin() + static_cast<std::vector<AEnemy>::difference_type>(enemyIndex));
         if (moveIntoTile && isWalkableTile(targetX, targetY)) {
             player.setPosition(targetX, targetY);
@@ -468,7 +476,7 @@ bool Stage::playerRangedAttack(int targetX, int targetY) {
         }
         targetEnemy.dropExperience(player);
         targetEnemy.tryDropItem(player);
-        while (player.checkLevelUp()) {}
+        resolvePlayerLevelUps();
         enemies.erase(enemies.begin() + static_cast<std::vector<AEnemy>::difference_type>(enemyIndex));
     }
 
@@ -567,7 +575,7 @@ void Stage::performEnemiesTurn() {
         }
         targetEnemy.dropExperience(player);
         targetEnemy.tryDropItem(player);
-        while (player.checkLevelUp()) {}
+        resolvePlayerLevelUps();
         enemies.erase(enemies.begin() + static_cast<std::vector<AEnemy>::difference_type>(enemyIndex));
     };
 
